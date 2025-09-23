@@ -1,0 +1,35 @@
+# Danh sách chức năng website bán hàng nông sản địa phương (có VNPAY test)
+0)đăng ký 
+0.5) đăng nhập
+0.6) Quyên mật khẩu qua emailemail
+1) Trang chủ & Nội dung giới thiệu
+2) Danh mục & Sản phẩm
+3) Tìm kiếm & Lọc
+4) Giỏ hàng & Yêu thích
+5) Mã giảm giá & Khuyến mãi
+6) Đặt hàng (Checkout)
+7) Thanh toán online qua VNPAY (Test/Sandbox)
+8) Tài khoản người dùng, phân quyền (admin, user , nhân viên bán hàng)
+9) Quản trị (Admin)
+- Quản lý sản phẩm: CRUD, tồn kho, hình ảnh, SEO
+- Quản lý danh mục, thuộc tính
+- Quản lý đơn hàng: xem/duyệt/đổi trạng thái
+- Quản lý mã giảm giá
+- Quản lý người dùng/nhà cung cấp
+- Báo cáo doanh thu, đơn hàng, sản phẩm bán chạy, kênh thanh toán
+
+10) Đánh giá & phản hồi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
