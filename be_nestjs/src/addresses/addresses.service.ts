@@ -5,6 +5,11 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AddressesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Trả về danh sách địa chỉ của user theo userId
+   * - Ép kiểu BigInt -> number để trả JSON
+   * - Sắp xếp: địa chỉ mặc định trước, sau đó id mới nhất
+   */
   async list(userId: number) {
     if (!userId) throw new BadRequestException({ error: 'Thiếu userId' })
     const addresses = await this.prisma.address.findMany({
@@ -15,6 +20,11 @@ export class AddressesService {
     return { success: true, data }
   }
 
+  /**
+   * Tạo địa chỉ mới cho user
+   * - Validate dữ liệu bắt buộc
+   * - Nếu isDefault = true: hạ cờ mặc định các địa chỉ khác
+   */
   async create(userId: number, dto: any) {
     if (!userId) throw new BadRequestException({ error: 'Thiếu userId' })
     const {
@@ -37,6 +47,11 @@ export class AddressesService {
     return { success: true, id: Number(created.id) }
   }
 
+  /**
+   * Cập nhật địa chỉ theo id (chỉ địa chỉ thuộc user)
+   * - Partial update
+   * - Hỗ trợ đặt lại địa chỉ mặc định
+   */
   async update(userId: number, id: number, dto: any) {
     if (!userId || !id) throw new BadRequestException({ error: 'Thiếu dữ liệu' })
 
@@ -62,6 +77,9 @@ export class AddressesService {
     return { success: true }
   }
 
+  /**
+   * Xóa địa chỉ theo id (chỉ địa chỉ thuộc user)
+   */
   async remove(userId: number, id: number) {
     if (!userId || !id) throw new BadRequestException({ error: 'Thiếu dữ liệu' })
     const address = await this.prisma.address.findFirst({ where: { id: BigInt(id), userId: BigInt(userId) } })
