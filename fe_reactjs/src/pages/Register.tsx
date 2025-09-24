@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { GoogleButton } from '@/components/auth/GoogleButton'
 import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { authApi } from '@/services/api'
 
 interface RegisterFormData {
   fullName: string
@@ -53,29 +54,31 @@ export default function Register() {
     }
   }
 
-  // Xử lý đăng ký Google
+  // Đăng ký bằng Google sử dụng ID token
   const handleGoogleRegister = async () => {
     try {
       setIsGoogleLoading(true)
-      
-      // Load Google API
-      if (!window.google) {
-        await loadGoogleAPI()
+
+      if (!(window as any).google) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script')
+          s.src = 'https://accounts.google.com/gsi/client'
+          s.onload = resolve
+          s.onerror = () => reject(new Error('Failed to load Google API'))
+          document.head.appendChild(s)
+        })
       }
 
-      // Khởi tạo Google Sign-In
-      const authInstance = window.google.accounts.oauth2.initTokenClient({
+      const google = (window as any).google
+      google.accounts.id.initialize({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        scope: 'email profile',
-        callback: async (response: any) => {
+        ux_mode: 'popup',
+        use_fedcm_for_prompt: false,
+        callback: async ({ credential }: { credential: string }) => {
           try {
-            // Gửi token đến backend
-            const result = await authApi.googleLogin(response.access_token)
-            
-            // Lưu thông tin user
+            const result = await authApi.googleLogin(credential)
             localStorage.setItem('token', result.data.token)
             localStorage.setItem('user', JSON.stringify(result.data.user))
-            
             toast.success('Đăng ký Google thành công!')
             navigate('/')
           } catch (error: any) {
@@ -85,28 +88,11 @@ export default function Register() {
           }
         }
       })
-
-      authInstance.requestAccessToken()
-    } catch (error: any) {
+      google.accounts.id.prompt()
+    } catch (error) {
       toast.error('Lỗi khởi tạo Google Sign-In')
       setIsGoogleLoading(false)
     }
-  }
-
-  // Load Google API
-  const loadGoogleAPI = () => {
-    return new Promise((resolve, reject) => {
-      if (window.google) {
-        resolve(window.google)
-        return
-      }
-
-      const script = document.createElement('script')
-      script.src = 'https://accounts.google.com/gsi/client'
-      script.onload = () => resolve(window.google)
-      script.onerror = () => reject(new Error('Failed to load Google API'))
-      document.head.appendChild(script)
-    })
   }
 
   return (
