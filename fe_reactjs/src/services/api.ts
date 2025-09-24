@@ -48,6 +48,10 @@ export const authApi = {
     phone?: string
   }) => api.post('/auth/register', data),
   
+  // Đăng nhập Google
+  googleLogin: (idToken: string) =>
+    api.post('/auth/google', { idToken }),
+  
   // Quên mật khẩu
   forgotPassword: (email: string) =>
     api.post('/auth/forgot-password', { email }),
