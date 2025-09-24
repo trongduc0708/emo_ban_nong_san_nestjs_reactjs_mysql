@@ -17,7 +17,7 @@ export declare class AuthService {
             fullName: string;
             phone: string | null;
             avatarUrl: string | null;
-            role: import("@prisma/client").$Enums.UserRole;
+            role: import(".prisma/client").$Enums.UserRole;
         };
     }>;
     login(dto: {
@@ -32,7 +32,7 @@ export declare class AuthService {
             fullName: string;
             phone: string | null;
             avatarUrl: string | null;
-            role: import("@prisma/client").$Enums.UserRole;
+            role: import(".prisma/client").$Enums.UserRole;
         };
     }>;
 }

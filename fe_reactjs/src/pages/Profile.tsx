@@ -9,6 +9,7 @@ import { addressesApi } from '@/services/api'
 export default function Profile() {
   const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
+  const [addressOpenTick, setAddressOpenTick] = useState(0)
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
@@ -106,12 +107,12 @@ export default function Profile() {
                 <MapPin className="w-5 h-5 mr-2 text-green-500" />
                 Địa chỉ giao hàng
               </h2>
-              <Button variant="outline" onClick={() => setShowAddressForm(true)} className="flex items-center">
+              <Button variant="outline" onClick={() => setAddressOpenTick(t => t + 1)} className="flex items-center">
                 <Plus className="w-4 h-4 mr-2" />
                 Thêm địa chỉ
               </Button>
             </div>
-            <AddressSection />
+            <AddressSection openSignal={addressOpenTick} />
           </Card>
         </div>
 
@@ -164,7 +165,7 @@ export default function Profile() {
   )
 }
 
-function AddressSection() {
+function AddressSection({ openSignal = 0 }: { openSignal?: number }) {
   const [list, setList] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
@@ -184,6 +185,14 @@ function AddressSection() {
   }
 
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    if (openSignal > 0) {
+      setEditing(null)
+      setForm({ recipientName: '', phone: '', province: '', district: '', ward: '', addressLine: '', isDefault: false })
+      setShowForm(true)
+    }
+  }, [openSignal])
 
   const onSubmit = async () => {
     setLoading(true)
