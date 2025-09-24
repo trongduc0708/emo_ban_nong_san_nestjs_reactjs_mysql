@@ -3,9 +3,9 @@
 /node_modules
 /build
 /tmp
-/be_nestjs
-/be_nextjs
-/fe_reactjs
+/be_nestjs/node_modules
+/be_nextjs/node_modules
+/fe_reactjs/node_modules
 
 # Logs
 logs

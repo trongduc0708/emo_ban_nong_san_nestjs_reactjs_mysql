@@ -1,0 +1,227 @@
+import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Search, Filter, Grid, List } from 'lucide-react'
+
+export default function Products() {
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+
+  // Mock data - sẽ thay thế bằng API call
+  const products = [
+    {
+      id: 1,
+      name: 'Cà chua hữu cơ',
+      price: 25000,
+      image: 'https://images.unsplash.com/photo-1592924357228-91b4b4c8c5b8?w=400',
+      category: 'Rau củ',
+      rating: 4.8,
+      reviews: 124
+    },
+    {
+      id: 2,
+      name: 'Táo đỏ tươi',
+      price: 45000,
+      image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400',
+      category: 'Trái cây',
+      rating: 4.9,
+      reviews: 89
+    },
+    {
+      id: 3,
+      name: 'Rau muống sạch',
+      price: 15000,
+      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
+      category: 'Rau củ',
+      rating: 4.7,
+      reviews: 156
+    },
+    {
+      id: 4,
+      name: 'Chuối tiêu',
+      price: 20000,
+      image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b04e?w=400',
+      category: 'Trái cây',
+      rating: 4.6,
+      reviews: 203
+    }
+  ]
+
+  const categories = [
+    { id: '', name: 'Tất cả' },
+    { id: 'rau-cu', name: 'Rau củ' },
+    { id: 'trai-cay', name: 'Trái cây' },
+    { id: 'dac-san', name: 'Đặc sản' }
+  ]
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Sản Phẩm</h1>
+        <p className="text-lg text-gray-600">
+          Khám phá đa dạng các loại nông sản tươi ngon
+        </p>
+      </div>
+
+      {/* Filters */}
+      <Card className="mb-8">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1">
+            <Input
+              placeholder="Tìm kiếm sản phẩm..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              icon={<Search className="w-5 h-5" />}
+            />
+          </div>
+
+          {/* Category Filter */}
+          <div className="lg:w-64">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* View Mode */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg ${
+                viewMode === 'grid'
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              <Grid className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg ${
+                viewMode === 'list'
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              <List className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Products Grid */}
+      <div className={
+        viewMode === 'grid'
+          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+          : 'space-y-4'
+      }>
+        {products.map((product) => (
+          <Card key={product.id} className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            {viewMode === 'grid' ? (
+              // Grid View
+              <>
+                <div className="aspect-w-16 aspect-h-12 mb-4">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-gray-900 line-clamp-2">
+                    {product.name}
+                  </h3>
+                  <p className="text-sm text-gray-500">{product.category}</p>
+                  <div className="flex items-center space-x-1">
+                    <div className="flex text-yellow-400">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className="text-sm">★</span>
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {product.rating} ({product.reviews})
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl font-bold text-green-600">
+                      {product.price.toLocaleString('vi-VN')}₫
+                    </span>
+                    <Button size="sm">
+                      Thêm vào giỏ
+                    </Button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              // List View
+              <div className="flex gap-4">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-32 h-32 object-cover rounded-lg"
+                />
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {product.name}
+                  </h3>
+                  <p className="text-gray-500">{product.category}</p>
+                  <div className="flex items-center space-x-1">
+                    <div className="flex text-yellow-400">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className="text-sm">★</span>
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {product.rating} ({product.reviews} đánh giá)
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl font-bold text-green-600">
+                      {product.price.toLocaleString('vi-VN')}₫
+                    </span>
+                    <Button size="sm">
+                      Thêm vào giỏ
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-12 flex justify-center">
+        <nav className="flex items-center space-x-2">
+          <button className="px-3 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
+            Trước
+          </button>
+          <button className="px-3 py-2 rounded-lg bg-primary-500 text-white">
+            1
+          </button>
+          <button className="px-3 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
+            2
+          </button>
+          <button className="px-3 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
+            3
+          </button>
+          <button className="px-3 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
+            Sau
+          </button>
+        </nav>
+      </div>
+    </div>
+  )
+}
