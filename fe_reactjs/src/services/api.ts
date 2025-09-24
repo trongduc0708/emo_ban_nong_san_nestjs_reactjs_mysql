@@ -169,4 +169,28 @@ export const adminApi = {
   updateUser: (id: number, data: any) => api.put(`/admin/users/${id}`, data),
 }
 
+// API cho Addresses
+export const addressesApi = {
+  getAddresses: () => api.get('/addresses'),
+  createAddress: (data: {
+    recipientName: string
+    phone: string
+    province: string
+    district: string
+    ward: string
+    addressLine: string
+    isDefault?: boolean
+  }) => api.post('/addresses', data),
+  updateAddress: (id: number, data: Partial<{
+    recipientName: string
+    phone: string
+    province: string
+    district: string
+    ward: string
+    addressLine: string
+    isDefault: boolean
+  }>) => api.put(`/addresses/${id}`, data),
+  deleteAddress: (id: number) => api.delete(`/addresses/${id}`),
+}
+
 export default api

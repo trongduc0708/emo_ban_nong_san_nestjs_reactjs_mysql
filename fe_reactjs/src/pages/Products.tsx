@@ -111,16 +111,20 @@ export default function Products() {
               // Grid View
               <>
                 <div className="aspect-w-16 aspect-h-12 mb-4">
-                  <img
-                    src={product.images?.[0]?.imageUrl || 'https://picsum.photos/seed/emo/800/600'}
-                    alt={product.name}
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
+                  <Link to={`/products/${product.id}`}>
+                    <img
+                      src={product.images?.[0]?.imageUrl || 'https://picsum.photos/seed/emo/800/600'}
+                      alt={product.name}
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                  </Link>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-gray-900 line-clamp-2">
-                    {product.name}
-                  </h3>
+                  <Link to={`/products/${product.id}`}>
+                    <h3 className="font-semibold text-gray-900 line-clamp-2 hover:text-green-600 transition-colors">
+                      {product.name}
+                    </h3>
+                  </Link>
                   <p className="text-sm text-gray-500">{product.category?.name}</p>
                   <div className="flex items-center space-x-1">
                     <div className="flex text-yellow-400">
@@ -145,15 +149,19 @@ export default function Products() {
             ) : (
               // List View
               <div className="flex gap-4">
-                <img
-                  src={product.images?.[0]?.imageUrl || 'https://picsum.photos/seed/emo/800/600'}
-                  alt={product.name}
-                  className="w-32 h-32 object-cover rounded-lg"
-                />
+                <Link to={`/products/${product.id}`}>
+                  <img
+                    src={product.images?.[0]?.imageUrl || 'https://picsum.photos/seed/emo/800/600'}
+                    alt={product.name}
+                    className="w-32 h-32 object-cover rounded-lg"
+                  />
+                </Link>
                 <div className="flex-1 space-y-2">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {product.name}
-                  </h3>
+                  <Link to={`/products/${product.id}`}>
+                    <h3 className="text-lg font-semibold text-gray-900 hover:text-green-600 transition-colors">
+                      {product.name}
+                    </h3>
+                  </Link>
                   <p className="text-gray-500">{product.category?.name}</p>
                   <div className="flex items-center space-x-1">
                     <div className="flex text-yellow-400">

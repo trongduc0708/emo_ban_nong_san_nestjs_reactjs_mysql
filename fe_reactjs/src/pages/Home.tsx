@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -12,26 +12,62 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-green-500 to-blue-600 text-white py-20">
         <div className="absolute inset-0 bg-black opacity-20"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Nông Sản Tươi Ngon
-            <span className="block text-yellow-300">Địa Phương</span>
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 text-green-100">
-            Mang đến những sản phẩm nông sản chất lượng cao, tươi ngon từ các trang trại địa phương
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/products">
-              <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100">
-                Mua sắm ngay
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-            <Link to="/about">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-green-600">
-                Tìm hiểu thêm
-              </Button>
-            </Link>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+            {/* Left copy */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">
+                Nông Sản Tươi Ngon
+                <span className="block text-yellow-300">Địa Phương</span>
+              </h1>
+              <p className="text-xl md:text-2xl mb-8 text-green-100">
+                Mang đến những sản phẩm nông sản chất lượng cao, tươi ngon từ các trang trại địa phương
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 lg:justify-start justify-center">
+                <Link to="/products">
+                  <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100">
+                    Mua sắm ngay
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+                <Link to="/about">
+                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-green-600">
+                    Tìm hiểu thêm
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Right slider */}
+            {(() => {
+              const slides = [
+                'https://media.istockphoto.com/id/1130497489/vi/anh/n%C3%B4ng-d%C3%A2n-s%E1%BB%AD-d%E1%BB%A5ng-robot-%C4%91i%E1%BB%81u-khi%E1%BB%83n-m%C3%A1y-t%C3%ADnh-b%E1%BA%A3ng-k%E1%BB%B9-thu%E1%BA%ADt-s%E1%BB%91-%C4%91%E1%BB%83-thu-ho%E1%BA%A1ch-c%C3%A0-chua-trong-ng%C3%A0nh.jpg?s=1024x1024&w=is&k=20&c=_bJJVA7s2u7vSrbBtmxBdX7uHMHPyTFUdzpTZ_QzTq4=',
+                'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=1400&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1506806732259-39c2d0268443?q=80&w=1400&auto=format&fit=crop',
+              ]
+              const [idx, setIdx] = useState(0)
+              useEffect(() => {
+                const t = setInterval(() => setIdx((i) => (i + 1) % slides.length), 4000)
+                return () => clearInterval(t)
+              }, [])
+              return (
+                <div className="relative h-72 md:h-96 rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/20">
+                  {slides.map((src, i) => (
+                    <img
+                      key={src}
+                      src={src}
+                      alt="banner"
+                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${i === idx ? 'opacity-100' : 'opacity-0'}`}
+                    />
+                  ))}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                    {slides.map((_, i) => (
+                      <span key={i} className={`h-2 w-2 rounded-full ${i === idx ? 'bg-white' : 'bg-white/50'}`}></span>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         </div>
       </section>

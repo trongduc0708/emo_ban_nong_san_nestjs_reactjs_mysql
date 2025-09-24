@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { User, Mail, Phone, MapPin, Edit3, Save, X } from 'lucide-react'
+import { User, Mail, Phone, MapPin, Edit3, Save, X, Plus, Trash2 } from 'lucide-react'
+import { addressesApi } from '@/services/api'
 
 export default function Profile() {
   const { user } = useAuth()
@@ -105,32 +106,12 @@ export default function Profile() {
                 <MapPin className="w-5 h-5 mr-2 text-green-500" />
                 Địa chỉ giao hàng
               </h2>
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => setShowAddressForm(true)} className="flex items-center">
+                <Plus className="w-4 h-4 mr-2" />
                 Thêm địa chỉ
               </Button>
             </div>
-
-            <div className="space-y-4">
-              <div className="p-4 border border-gray-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Nguyễn Văn A</h3>
-                    <p className="text-gray-600">0123 456 789</p>
-                    <p className="text-gray-600">
-                      123 Đường ABC, Phường XYZ, Quận 1, TP.HCM
-                    </p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
-                      Chỉnh sửa
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      Xóa
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <AddressSection />
           </Card>
         </div>
 
@@ -179,6 +160,126 @@ export default function Profile() {
           </Card>
         </div>
       </div>
+    </div>
+  )
+}
+
+function AddressSection() {
+  const [list, setList] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState<any | null>(null)
+  const [form, setForm] = useState({
+    recipientName: '', phone: '', province: '', district: '', ward: '', addressLine: '', isDefault: false,
+  })
+
+  const load = async () => {
+    setLoading(true)
+    try {
+      const res = await addressesApi.getAddresses()
+      setList(res.data.data || [])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  const onSubmit = async () => {
+    setLoading(true)
+    try {
+      if (editing) {
+        await addressesApi.updateAddress(editing.id, form)
+      } else {
+        await addressesApi.createAddress(form)
+      }
+      setShowForm(false)
+      setEditing(null)
+      setForm({ recipientName: '', phone: '', province: '', district: '', ward: '', addressLine: '', isDefault: false })
+      await load()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const onEdit = (addr: any) => {
+    setEditing(addr)
+    setForm({
+      recipientName: addr.recipientName || '',
+      phone: addr.phone || '',
+      province: addr.province || '',
+      district: addr.district || '',
+      ward: addr.ward || '',
+      addressLine: addr.addressLine || '',
+      isDefault: !!addr.isDefault,
+    })
+    setShowForm(true)
+  }
+
+  const onDelete = async (id: number) => {
+    setLoading(true)
+    try {
+      await addressesApi.deleteAddress(id)
+      await load()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {loading && <div className="text-sm text-gray-500">Đang xử lý...</div>}
+
+      {showForm && (
+        <div className="p-4 border border-gray-200 rounded-lg space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Input label="Người nhận" value={form.recipientName} onChange={e=>setForm({...form, recipientName:e.target.value})} />
+            <Input label="Số điện thoại" value={form.phone} onChange={e=>setForm({...form, phone:e.target.value})} />
+            <Input label="Tỉnh/TP" value={form.province} onChange={e=>setForm({...form, province:e.target.value})} />
+            <Input label="Quận/Huyện" value={form.district} onChange={e=>setForm({...form, district:e.target.value})} />
+            <Input label="Phường/Xã" value={form.ward} onChange={e=>setForm({...form, ward:e.target.value})} />
+            <Input label="Địa chỉ" value={form.addressLine} onChange={e=>setForm({...form, addressLine:e.target.value})} />
+          </div>
+          <div className="flex items-center gap-3">
+            <input id="isDefault" type="checkbox" checked={form.isDefault} onChange={e=>setForm({...form, isDefault:e.target.checked})} />
+            <label htmlFor="isDefault" className="text-sm">Đặt làm địa chỉ mặc định</label>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={onSubmit} disabled={loading}>
+              {editing ? 'Lưu thay đổi' : 'Thêm địa chỉ'}
+            </Button>
+            <Button variant="outline" onClick={()=>{setShowForm(false); setEditing(null)}}>Hủy</Button>
+          </div>
+        </div>
+      )}
+
+      {list.map((addr) => (
+        <div key={addr.id} className="p-4 border border-gray-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-900">
+                {addr.recipientName} {addr.isDefault && <span className="ml-2 text-xs text-white bg-green-600 px-2 py-0.5 rounded">Mặc định</span>}
+              </h3>
+              <p className="text-gray-600">{addr.phone}</p>
+              <p className="text-gray-600">{addr.addressLine}, {addr.ward}, {addr.district}, {addr.province}</p>
+            </div>
+            <div className="flex space-x-2">
+              <Button variant="outline" size="sm" onClick={()=>onEdit(addr)}>
+                Chỉnh sửa
+              </Button>
+              <Button variant="outline" size="sm" className="text-red-600" onClick={()=>onDelete(addr.id)}>
+                <Trash2 className="w-4 h-4 mr-1" /> Xóa
+              </Button>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {!showForm && (
+        <Button variant="outline" onClick={()=>setShowForm(true)} className="flex items-center">
+          <Plus className="w-4 h-4 mr-2" /> Thêm địa chỉ
+        </Button>
+      )}
     </div>
   )
 }
