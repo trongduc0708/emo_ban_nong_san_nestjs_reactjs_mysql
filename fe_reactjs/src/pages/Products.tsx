@@ -1,61 +1,36 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Search, Filter, Grid, List } from 'lucide-react'
+import { useQuery } from 'react-query'
+import { productApi } from '@/services/api'
 
 export default function Products() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
 
-  // Mock data - sẽ thay thế bằng API call
-  const products = [
-    {
-      id: 1,
-      name: 'Cà chua hữu cơ',
-      price: 25000,
-      image: 'https://images.unsplash.com/photo-1592924357228-91b4b4c8c5b8?w=400',
-      category: 'Rau củ',
-      rating: 4.8,
-      reviews: 124
-    },
-    {
-      id: 2,
-      name: 'Táo đỏ tươi',
-      price: 45000,
-      image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400',
-      category: 'Trái cây',
-      rating: 4.9,
-      reviews: 89
-    },
-    {
-      id: 3,
-      name: 'Rau muống sạch',
-      price: 15000,
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
-      category: 'Rau củ',
-      rating: 4.7,
-      reviews: 156
-    },
-    {
-      id: 4,
-      name: 'Chuối tiêu',
-      price: 20000,
-      image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b04e?w=400',
-      category: 'Trái cây',
-      rating: 4.6,
-      reviews: 203
-    }
-  ]
+  // Load categories from API
+  const { data: categoriesResp } = useQuery(['categories'], () => productApi.getCategories().then(r => r.data))
+  const categories = useMemo(() => {
+    const list = categoriesResp?.data || []
+    return [{ id: '', name: 'Tất cả', slug: '' }, ...list.map((c: any) => ({ id: String(c.id), name: c.name, slug: c.slug }))]
+  }, [categoriesResp])
 
-  const categories = [
-    { id: '', name: 'Tất cả' },
-    { id: 'rau-cu', name: 'Rau củ' },
-    { id: 'trai-cay', name: 'Trái cây' },
-    { id: 'dac-san', name: 'Đặc sản' }
-  ]
+  // Load products from API
+  const { data: productsResp, isLoading } = useQuery([
+    'products', selectedCategory, searchTerm
+  ], () => productApi.getProducts({
+    page: 1,
+    limit: 12,
+    category: selectedCategory || undefined,
+    search: searchTerm || undefined,
+  }).then(r => r.data), {
+    keepPreviousData: true,
+  })
+  const products = productsResp?.data?.products || []
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -88,7 +63,7 @@ export default function Products() {
               className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               {categories.map((category) => (
-                <option key={category.id} value={category.id}>
+                <option key={category.slug ?? category.id} value={category.slug ?? ''}>
                   {category.name}
                 </option>
               ))}
@@ -122,19 +97,22 @@ export default function Products() {
       </Card>
 
       {/* Products Grid */}
+      {isLoading && (
+        <div className="py-12 text-center text-gray-500">Đang tải sản phẩm...</div>
+      )}
       <div className={
         viewMode === 'grid'
           ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
           : 'space-y-4'
       }>
-        {products.map((product) => (
+        {products.map((product: any) => (
           <Card key={product.id} className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             {viewMode === 'grid' ? (
               // Grid View
               <>
                 <div className="aspect-w-16 aspect-h-12 mb-4">
                   <img
-                    src={product.image}
+                    src={product.images?.[0]?.imageUrl || 'https://picsum.photos/seed/emo/800/600'}
                     alt={product.name}
                     className="w-full h-48 object-cover rounded-lg"
                   />
@@ -143,7 +121,7 @@ export default function Products() {
                   <h3 className="font-semibold text-gray-900 line-clamp-2">
                     {product.name}
                   </h3>
-                  <p className="text-sm text-gray-500">{product.category}</p>
+                  <p className="text-sm text-gray-500">{product.category?.name}</p>
                   <div className="flex items-center space-x-1">
                     <div className="flex text-yellow-400">
                       {[...Array(5)].map((_, i) => (
@@ -151,12 +129,12 @@ export default function Products() {
                       ))}
                     </div>
                     <span className="text-sm text-gray-500">
-                      {product.rating} ({product.reviews})
+                      {(product.avgRating ?? 5).toFixed(1)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xl font-bold text-green-600">
-                      {product.price.toLocaleString('vi-VN')}₫
+                      {(product.variants?.[0]?.price ?? 0).toLocaleString('vi-VN')}₫
                     </span>
                     <Button size="sm">
                       Thêm vào giỏ
@@ -168,7 +146,7 @@ export default function Products() {
               // List View
               <div className="flex gap-4">
                 <img
-                  src={product.image}
+                  src={product.images?.[0]?.imageUrl || 'https://picsum.photos/seed/emo/800/600'}
                   alt={product.name}
                   className="w-32 h-32 object-cover rounded-lg"
                 />
@@ -176,7 +154,7 @@ export default function Products() {
                   <h3 className="text-lg font-semibold text-gray-900">
                     {product.name}
                   </h3>
-                  <p className="text-gray-500">{product.category}</p>
+                  <p className="text-gray-500">{product.category?.name}</p>
                   <div className="flex items-center space-x-1">
                     <div className="flex text-yellow-400">
                       {[...Array(5)].map((_, i) => (
@@ -184,12 +162,12 @@ export default function Products() {
                       ))}
                     </div>
                     <span className="text-sm text-gray-500">
-                      {product.rating} ({product.reviews} đánh giá)
+                      {(product.avgRating ?? 5).toFixed(1)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xl font-bold text-green-600">
-                      {product.price.toLocaleString('vi-VN')}₫
+                      {(product.variants?.[0]?.price ?? 0).toLocaleString('vi-VN')}₫
                     </span>
                     <Button size="sm">
                       Thêm vào giỏ

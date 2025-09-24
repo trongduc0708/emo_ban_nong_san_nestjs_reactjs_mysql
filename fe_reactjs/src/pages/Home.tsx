@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { ArrowRight, Star, Truck, Shield, Leaf } from 'lucide-react'
+import { useQuery } from 'react-query'
+import { productApi } from '@/services/api'
 
 export default function Home() {
   return (
@@ -93,38 +95,34 @@ export default function Home() {
               Khám phá đa dạng các loại nông sản tươi ngon
             </p>
           </div>
+          {(() => {
+            const { data } = useQuery(['home-categories'], () => productApi.getCategories().then(r => r.data))
+            const categories = (data?.data || []).slice(0, 6)
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Link to="/products?category=rau-cu">
-              <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                <div className="aspect-w-16 aspect-h-9 bg-gradient-to-r from-green-400 to-green-600 rounded-lg mb-4 flex items-center justify-center">
-                  <span className="text-6xl">🥬</span>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Rau Củ</h3>
-                <p className="text-gray-600">Rau củ tươi ngon, giàu dinh dưỡng</p>
-              </Card>
-            </Link>
+            const pickEmoji = (slug: string) => {
+              if (!slug) return '🛒'
+              if (slug.includes('rau')) return '🥬'
+              if (slug.includes('trai') || slug.includes('tao')) return '🍎'
+              if (slug.includes('dac') || slug.includes('san')) return '🌽'
+              return '🛒'
+            }
 
-            <Link to="/products?category=trai-cay">
-              <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                <div className="aspect-w-16 aspect-h-9 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg mb-4 flex items-center justify-center">
-                  <span className="text-6xl">🍎</span>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Trái Cây</h3>
-                <p className="text-gray-600">Trái cây ngọt ngào, đầy vitamin</p>
-              </Card>
-            </Link>
-
-            <Link to="/products?category=dac-san">
-              <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                <div className="aspect-w-16 aspect-h-9 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg mb-4 flex items-center justify-center">
-                  <span className="text-6xl">🌽</span>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Đặc Sản</h3>
-                <p className="text-gray-600">Đặc sản địa phương độc đáo</p>
-              </Card>
-            </Link>
-          </div>
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {categories.map((c: any) => (
+                  <Link key={c.id} to={`/products?category=${encodeURIComponent(c.slug)}`}>
+                    <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                      <div className="aspect-w-16 aspect-h-9 bg-gradient-to-r from-green-400 to-blue-600 rounded-lg mb-4 flex items-center justify-center">
+                        <span className="text-6xl">{pickEmoji(c.slug)}</span>
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{c.name}</h3>
+                      <p className="text-gray-600">{c.description || 'Khám phá sản phẩm nổi bật'}</p>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )
+          })()}
         </div>
       </section>
 

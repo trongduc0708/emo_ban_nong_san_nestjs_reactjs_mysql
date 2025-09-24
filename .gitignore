@@ -6,7 +6,8 @@
 /be_nestjs/node_modules
 /be_nextjs/node_modules
 /fe_reactjs/node_modules
-
+/fe_reactjs/dist
+/be_nestjs/dist
 # Logs
 logs
 *.log

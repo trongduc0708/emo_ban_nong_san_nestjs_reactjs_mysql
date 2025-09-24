@@ -27,18 +27,18 @@ export declare class CartController {
                 };
                 variant: {
                     id: bigint;
-                    productId: bigint;
                     isActive: boolean;
+                    price: import("@prisma/client/runtime/library").Decimal;
+                    productId: bigint;
                     variantName: string;
                     unitLabel: string | null;
-                    price: import("@prisma/client/runtime/library").Decimal;
                     compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
                     stockQuantity: number;
                 } | null;
             } & {
                 id: bigint;
-                cartId: bigint;
                 productId: bigint;
+                cartId: bigint;
                 variantId: bigint | null;
                 quantity: number;
                 unitPriceSnapshot: import("@prisma/client/runtime/library").Decimal;
