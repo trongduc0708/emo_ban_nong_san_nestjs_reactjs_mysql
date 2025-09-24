@@ -10,11 +10,13 @@ exports.CartModule = void 0;
 const common_1 = require("@nestjs/common");
 const cart_controller_1 = require("./cart.controller");
 const cart_service_1 = require("./cart.service");
+const prisma_module_1 = require("../prisma/prisma.module");
 let CartModule = class CartModule {
 };
 exports.CartModule = CartModule;
 exports.CartModule = CartModule = __decorate([
     (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule],
         controllers: [cart_controller_1.CartController],
         providers: [cart_service_1.CartService],
     })
