@@ -1,7 +1,7 @@
 # Danh sách chức năng website bán hàng nông sản địa phương (có VNPAY test)
 0)đăng ký 
-0.5) đăng nhập
-0.6) Quyên mật khẩu qua emailemail
+0.5) đăng nhập bằngbằng googleoogle authen
+0.6) Quyên mật khẩu qua email
 1) Trang chủ & Nội dung giới thiệu
 2) Danh mục & Sản phẩm
 3) Tìm kiếm & Lọc
