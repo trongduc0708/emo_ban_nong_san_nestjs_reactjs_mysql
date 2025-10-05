@@ -7,7 +7,7 @@ export class EmailService {
 
   constructor() {
     // Cấu hình transporter cho Gmail (có thể thay đổi cho provider khác)
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER || 'your-email@gmail.com',
