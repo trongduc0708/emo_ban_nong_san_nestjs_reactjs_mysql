@@ -33,4 +33,21 @@ export declare class AuthController {
             role: import(".prisma/client").$Enums.UserRole;
         };
     }>;
+    forgotPassword(dto: {
+        email: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    resetPassword(dto: {
+        token: string;
+        newPassword: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    validateResetToken(token: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
 }

@@ -56,6 +56,16 @@ export const authApi = {
   forgotPassword: (email: string) =>
     api.post('/auth/forgot-password', { email }),
   
+  // Đặt lại mật khẩu
+  resetPassword: (data: {
+    token: string
+    newPassword: string
+  }) => api.post('/auth/reset-password', data),
+  
+  // Validate reset token
+  validateResetToken: (token: string) =>
+    api.get('/auth/validate-reset-token', { params: { token } }),
+  
   // Đổi mật khẩu
   changePassword: (data: {
     currentPassword: string

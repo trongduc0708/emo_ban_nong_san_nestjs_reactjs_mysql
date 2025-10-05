@@ -1,9 +1,11 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../common/services/email.service';
 import { JwtService } from '@nestjs/jwt';
 export declare class AuthService {
     private readonly prisma;
     private readonly jwt;
-    constructor(prisma: PrismaService, jwt: JwtService);
+    private readonly emailService;
+    constructor(prisma: PrismaService, jwt: JwtService, emailService: EmailService);
     register(dto: {
         email: string;
         password: string;
@@ -34,5 +36,17 @@ export declare class AuthService {
             avatarUrl: string | null;
             role: import(".prisma/client").$Enums.UserRole;
         };
+    }>;
+    forgotPassword(email: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    resetPassword(token: string, newPassword: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    validateResetToken(token: string): Promise<{
+        success: boolean;
+        message: string;
     }>;
 }

@@ -87,9 +87,9 @@ export declare class ProductsController {
             } & {
                 id: bigint;
                 createdAt: Date;
+                userId: bigint;
                 productId: bigint;
                 isApproved: boolean;
-                userId: bigint;
                 orderId: bigint | null;
                 rating: number;
                 comment: string | null;

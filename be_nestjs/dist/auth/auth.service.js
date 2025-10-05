@@ -45,14 +45,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const email_service_1 = require("../common/services/email.service");
 const bcrypt = __importStar(require("bcryptjs"));
 const jwt_1 = require("@nestjs/jwt");
+const crypto_1 = require("crypto");
 let AuthService = class AuthService {
     prisma;
     jwt;
-    constructor(prisma, jwt) {
+    emailService;
+    constructor(prisma, jwt, emailService) {
         this.prisma = prisma;
         this.jwt = jwt;
+        this.emailService = emailService;
     }
     async register(dto) {
         const { email, password, fullName, phone } = dto;
@@ -98,10 +102,83 @@ let AuthService = class AuthService {
         };
         return { success: true, token, user: safeUser };
     }
+    async forgotPassword(email) {
+        if (!email)
+            throw new common_1.BadRequestException({ error: 'Email là bắt buộc' });
+        const user = await this.prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            return { success: true, message: 'Nếu email tồn tại, bạn sẽ nhận được link đặt lại mật khẩu' };
+        }
+        const token = (0, crypto_1.randomBytes)(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+        await this.prisma.passwordResetToken.deleteMany({
+            where: { userId: user.id }
+        });
+        await this.prisma.passwordResetToken.create({
+            data: {
+                userId: user.id,
+                token,
+                expiresAt
+            }
+        });
+        try {
+            await this.emailService.sendPasswordResetEmail(email, token, user.fullName);
+            console.log(`Reset password email sent to ${email}`);
+        }
+        catch (error) {
+            console.error('Failed to send reset password email:', error);
+        }
+        return { success: true, message: 'Nếu email tồn tại, bạn sẽ nhận được link đặt lại mật khẩu' };
+    }
+    async resetPassword(token, newPassword) {
+        if (!token || !newPassword) {
+            throw new common_1.BadRequestException({ error: 'Token và mật khẩu mới là bắt buộc' });
+        }
+        if (newPassword.length < 6) {
+            throw new common_1.BadRequestException({ error: 'Mật khẩu phải có ít nhất 6 ký tự' });
+        }
+        const resetToken = await this.prisma.passwordResetToken.findUnique({
+            where: { token },
+            include: { user: true }
+        });
+        if (!resetToken) {
+            throw new common_1.BadRequestException({ error: 'Token không hợp lệ' });
+        }
+        if (resetToken.expiresAt < new Date()) {
+            throw new common_1.BadRequestException({ error: 'Token đã hết hạn' });
+        }
+        const passwordHash = await bcrypt.hash(newPassword, 12);
+        await this.prisma.$transaction([
+            this.prisma.user.update({
+                where: { id: resetToken.userId },
+                data: { passwordHash }
+            }),
+            this.prisma.passwordResetToken.delete({
+                where: { id: resetToken.id }
+            })
+        ]);
+        return { success: true, message: 'Đặt lại mật khẩu thành công' };
+    }
+    async validateResetToken(token) {
+        if (!token)
+            throw new common_1.BadRequestException({ error: 'Token là bắt buộc' });
+        const resetToken = await this.prisma.passwordResetToken.findUnique({
+            where: { token }
+        });
+        if (!resetToken) {
+            throw new common_1.BadRequestException({ error: 'Token không hợp lệ' });
+        }
+        if (resetToken.expiresAt < new Date()) {
+            throw new common_1.BadRequestException({ error: 'Token đã hết hạn' });
+        }
+        return { success: true, message: 'Token hợp lệ' };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, jwt_1.JwtService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        jwt_1.JwtService,
+        email_service_1.EmailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map
