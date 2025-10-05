@@ -26,6 +26,14 @@ let ProductsController = class ProductsController {
     async detail(id) {
         return this.productsService.detail(Number(id));
     }
+    async getFeaturedProducts(limit) {
+        const limitNum = limit ? Number(limit) : 25;
+        return this.productsService.getFeaturedProducts(limitNum);
+    }
+    async getProductsByCategory(categorySlug, limit) {
+        const limitNum = limit ? Number(limit) : 5;
+        return this.productsService.getProductsByCategory(categorySlug, limitNum);
+    }
 };
 exports.ProductsController = ProductsController;
 __decorate([
@@ -48,6 +56,21 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "detail", null);
+__decorate([
+    (0, common_1.Get)('featured'),
+    __param(0, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "getFeaturedProducts", null);
+__decorate([
+    (0, common_1.Get)('category/:categorySlug'),
+    __param(0, (0, common_1.Param)('categorySlug')),
+    __param(1, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "getProductsByCategory", null);
 exports.ProductsController = ProductsController = __decorate([
     (0, common_1.Controller)('products'),
     __metadata("design:paramtypes", [products_service_1.ProductsService])

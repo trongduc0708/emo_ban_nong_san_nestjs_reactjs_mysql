@@ -138,4 +138,116 @@ export class ProductsService {
 
     return { success: true, data: safe };
   }
+
+  async getFeaturedProducts(limit: number = 25) {
+    const products = await this.prisma.product.findMany({
+      where: { isActive: true },
+      include: {
+        category: true,
+        images: { orderBy: { position: 'asc' }, take: 1 },
+        variants: { where: { isActive: true }, orderBy: { price: 'asc' } },
+        reviews: {
+          where: { isApproved: true },
+          select: { rating: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+
+    const data = products.map((p) => {
+      const avgRating = p.reviews.length
+        ? p.reviews.reduce((s, r) => s + r.rating, 0) / p.reviews.length
+        : 0;
+
+      return {
+        ...p,
+        id: Number(p.id),
+        categoryId: p.categoryId ? Number(p.categoryId) : null,
+        category: p.category
+          ? {
+              ...p.category,
+              id: Number(p.category.id),
+              parentId: p.category.parentId ? Number(p.category.parentId) : null,
+            }
+          : null,
+        images: p.images,
+        variants: p.variants.map((v) => ({
+          ...v,
+          id: Number(v.id),
+          productId: Number(v.productId),
+          price: Number(v.price),
+          compareAtPrice: v.compareAtPrice != null ? Number(v.compareAtPrice) : null,
+        })),
+        avgRating: Math.round(avgRating * 10) / 10,
+        reviewCount: p.reviews.length,
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        products: data,
+        total: data.length
+      }
+    };
+  }
+
+  async getProductsByCategory(categorySlug: string, limit: number = 5) {
+    const products = await this.prisma.product.findMany({
+      where: { 
+        isActive: true,
+        category: { slug: categorySlug }
+      },
+      include: {
+        category: true,
+        images: { orderBy: { position: 'asc' }, take: 1 },
+        variants: { where: { isActive: true }, orderBy: { price: 'asc' } },
+        reviews: {
+          where: { isApproved: true },
+          select: { rating: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+
+    const data = products.map((p) => {
+      const avgRating = p.reviews.length
+        ? p.reviews.reduce((s, r) => s + r.rating, 0) / p.reviews.length
+        : 0;
+
+      return {
+        ...p,
+        id: Number(p.id),
+        categoryId: p.categoryId ? Number(p.categoryId) : null,
+        category: p.category
+          ? {
+              ...p.category,
+              id: Number(p.category.id),
+              parentId: p.category.parentId ? Number(p.category.parentId) : null,
+            }
+          : null,
+        images: p.images,
+        variants: p.variants.map((v) => ({
+          ...v,
+          id: Number(v.id),
+          productId: Number(v.productId),
+          price: Number(v.price),
+          compareAtPrice: v.compareAtPrice != null ? Number(v.compareAtPrice) : null,
+        })),
+        avgRating: Math.round(avgRating * 10) / 10,
+        reviewCount: p.reviews.length,
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        products: data,
+        categorySlug,
+        total: data.length
+      }
+    };
+  }
 }

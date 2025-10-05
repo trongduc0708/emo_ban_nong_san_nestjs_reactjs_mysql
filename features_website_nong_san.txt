@@ -1,0 +1,76 @@
+# Danh sách chức năng website bán hàng nông sản địa phương (có VNPAY test)
+0)đăng ký 
+0.5) đăng nhập bằngbằng google authen
+0.6) Quyên mật khẩu qua email
+1) Trang chủ & Nội dung giới thiệu
+- Banner, bộ sưu tập sản phẩm nổi bật, khuyến mãi
+- Giới thiệu về nông trại/nhà cung cấp địa phương
+
+2) Danh mục & Sản phẩm
+- Quản lý danh mục nhiều cấp (Rau củ, Trái cây, Đặc sản, Hữu cơ...)
+- Trang danh sách sản phẩm với phân trang
+- Trang chi tiết sản phẩm: mô tả, giá, tồn kho, hình ảnh, đánh giá
+- Thuộc tính sản phẩm (khối lượng, quy cách đóng gói)
+
+
+3) Tìm kiếm & Lọc
+- Tìm kiếm theo tên/sku/từ khoá
+- Bộ lọc theo danh mục, khoảng giá
+- Sắp xếp theo: mới nhất, bán chạy, giá tăng/giảm
+
+4) Giỏ hàng & Yêu thích
+- Thêm/xoá/cập nhật số lượng trong giỏ
+- Lưu giỏ theo phiên và theo tài khoản (đồng bộ khi đăng nhập)
+- Danh sách yêu thích (wishlist)
+- Tính phí vận chuyển mặc đinh 200000
+
+5) Mã giảm giá & Khuyến mãi
+- Mã coupon theo phần trăm cố định
+- Điều kiện áp dụng: đơn tối thiểu, danh mục/sản phẩm, giới hạn lượt dùng
+
+6) Đặt hàng (Checkout)
+- Quy trình 3 bước: Thông tin nhận hàng → Vận chuyển → Thanh toán
+- Sổ địa chỉ: địa chỉ mặc định, nhiều địa chỉ
+- Phí ship: mặc đinh 200000
+- Ghi chú đơn hàng, yêu cầu xuất hoá đơn
+
+7) Thanh toán online qua VNPAY (Test/Sandbox)
+- Phương thức thanh toán: VNPAY QR/ATM/Credit (môi trường test)
+- Chuyển hướng sang VNPAY Sandbox, hiển thị thông tin đơn và số tiền
+- Xử lý callback/returnUrl và IPN (server-to-server) từ VNPAY
+- Xác thực checksum (vnp_SecureHash) bằng vnp_HashSecret
+- Cập nhật trạng thái đơn theo RspCode (00: thành công, khác: thất bại/huỷ)
+- Lưu log giao dịch: mã giao dịch (vnp_TxnRef), amount, bankCode, response
+- Cấu hình môi trường test: vnp_TmnCode, vnp_HashSecret, vnp_Url sandbox
+- Trang chi tiết đơn hiển thị lịch sử thanh toán, trạng thái, hoá đơn
+
+8) Tài khoản người dùng
+- Đăng ký/đăng nhập, quên mật khẩu (email)
+- Hồ sơ cá nhân, sổ địa chỉ, đổi mật khẩu
+- Lịch sử đơn hàng, chi tiết đơn, tái đặt hàng
+- Theo dõi trạng thái: Chờ xác nhận → Đang chuẩn bị → Đang giao → Hoàn tất/Hoàn tiền
+
+9) Quản trị (Admin)
+- Quản lý sản phẩm: CRUD, tồn kho, biến thể, hình ảnh, SEO
+- Quản lý danh mục, thuộc tính
+- Quản lý đơn hàng: xem/duyệt/đổi trạng thái, in hoá đơn/phiếu giao
+- Quản lý mã giảm giá
+- Quản lý người dùng/nhà cung cấp
+- Báo cáo doanh thu, đơn hàng, sản phẩm bán chạy, kênh thanh toán
+
+
+100) Đánh giá & phản hồi
+- Người mua đánh giá và bình luận sản phẩm (sau khi hoàn tất đơn)
+- Xếp hạng sao, ảnh bình luận, kiểm duyệt trước khi hiển thị
+
+
+
+
+
+
+
+
+
+
+
+

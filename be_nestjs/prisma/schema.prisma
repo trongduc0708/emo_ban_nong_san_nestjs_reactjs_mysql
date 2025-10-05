@@ -14,16 +14,16 @@ datasource db {
 model User {
   id                BigInt      @id @default(autoincrement())
   email             String      @unique @db.VarChar(191)
-  passwordHash      String?     @db.VarChar(255)
-  fullName          String      @db.VarChar(191)
+  passwordHash      String?     @map("password_hash") @db.VarChar(255)
+  fullName          String      @map("full_name") @db.VarChar(191)
   phone             String?     @db.VarChar(32)
-  avatarUrl         String?     @db.VarChar(255)
+  avatarUrl         String?     @map("avatar_url") @db.VarChar(255)
   role              UserRole    @default(customer)
   provider          AuthProvider @default(local)
-  providerId        String?     @db.VarChar(191)
-  emailVerifiedAt   DateTime?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  providerId        String?     @map("provider_id") @db.VarChar(191)
+  emailVerifiedAt   DateTime?   @map("email_verified_at")
+  createdAt         DateTime    @map("created_at") @default(now())
+  updatedAt         DateTime    @map("updated_at") @updatedAt
 
   // Relations
   addresses         Address[]
@@ -39,10 +39,10 @@ model User {
 
 model PasswordResetToken {
   id        BigInt   @id @default(autoincrement())
-  userId    BigInt
+  userId    BigInt   @map("user_id")
   token     String   @unique @db.VarChar(255)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @map("created_at") @default(now())
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -52,16 +52,16 @@ model PasswordResetToken {
 
 model Address {
   id            BigInt   @id @default(autoincrement())
-  userId        BigInt
-  recipientName String   @db.VarChar(191)
+  userId        BigInt   @map("user_id")
+  recipientName String   @map("recipient_name") @db.VarChar(191)
   phone         String   @db.VarChar(32)
   province      String   @db.VarChar(191)
   district      String   @db.VarChar(191)
   ward          String   @db.VarChar(191)
-  addressLine   String   @db.VarChar(255)
-  isDefault     Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  addressLine   String   @map("address_line") @db.VarChar(255)
+  isDefault     Boolean  @map("is_default") @default(false)
+  createdAt     DateTime @map("created_at") @default(now())
+  updatedAt     DateTime @map("updated_at") @updatedAt
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -73,11 +73,11 @@ model Address {
 // Danh mục và sản phẩm
 model Category {
   id          BigInt    @id @default(autoincrement())
-  parentId    BigInt?
+  parentId    BigInt?   @map("parent_id")
   name        String    @db.VarChar(191)
   slug        String    @unique @db.VarChar(191)
   description String?
-  isActive    Boolean   @default(true)
+  isActive    Boolean   @default(true) @map("is_active")
   position    Int       @default(0)
 
   // Relations
@@ -91,15 +91,15 @@ model Category {
 
 model Product {
   id          BigInt   @id @default(autoincrement())
-  categoryId  BigInt?
+  categoryId  BigInt?  @map("category_id")
   name        String   @db.VarChar(191)
   slug        String   @unique @db.VarChar(191)
   sku         String?  @db.VarChar(64)
   description String?
   origin      String?  @db.VarChar(191)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @map("is_active") @default(true)
+  createdAt   DateTime @map("created_at") @default(now())
+  updatedAt   DateTime @map("updated_at") @updatedAt
 
   // Relations
   category       Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -116,8 +116,8 @@ model Product {
 
 model ProductImage {
   id        BigInt @id @default(autoincrement())
-  productId BigInt
-  imageUrl  String @db.VarChar(255)
+  productId BigInt @map("product_id")
+  imageUrl  String @map("image_url") @db.VarChar(255)
   position  Int    @default(0)
 
   // Relations
@@ -129,13 +129,13 @@ model ProductImage {
 
 model ProductVariant {
   id             BigInt  @id @default(autoincrement())
-  productId      BigInt
-  variantName    String  @db.VarChar(191)
-  unitLabel      String? @db.VarChar(64)
+  productId      BigInt  @map("product_id")
+  variantName    String  @map("variant_name") @db.VarChar(191)
+  unitLabel      String? @map("unit_label") @db.VarChar(64)
   price          Decimal @db.Decimal(12, 2)
-  compareAtPrice Decimal? @db.Decimal(12, 2)
-  stockQuantity  Int     @default(0)
-  isActive       Boolean @default(true)
+  compareAtPrice Decimal? @map("compare_at_price") @db.Decimal(12, 2)
+  stockQuantity  Int     @map("stock_quantity") @default(0)
+  isActive       Boolean @map("is_active") @default(true)
 
   // Relations
   product     Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -150,10 +150,10 @@ model ProductVariant {
 // Giỏ hàng và yêu thích
 model Cart {
   id        BigInt   @id @default(autoincrement())
-  userId    BigInt?
-  sessionId String?  @db.VarChar(191)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId    BigInt?  @map("user_id")
+  sessionId String?  @map("session_id") @db.VarChar(191)
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   // Relations
   user  User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -167,11 +167,11 @@ model Cart {
 
 model CartItem {
   id                BigInt  @id @default(autoincrement())
-  cartId            BigInt
-  productId         BigInt
-  variantId         BigInt?
+  cartId            BigInt  @map("cart_id")
+  productId         BigInt  @map("product_id")
+  variantId         BigInt? @map("variant_id")
   quantity          Int
-  unitPriceSnapshot Decimal @db.Decimal(12, 2)
+  unitPriceSnapshot Decimal @map("unit_price_snapshot") @db.Decimal(12, 2)
 
   // Relations
   cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
@@ -184,8 +184,8 @@ model CartItem {
 
 model Wishlist {
   id        BigInt   @id @default(autoincrement())
-  userId    BigInt   @unique
-  createdAt DateTime @default(now())
+  userId    BigInt   @map("user_id") @unique
+  createdAt DateTime @map("created_at") @default(now())
 
   // Relations
   user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -196,10 +196,10 @@ model Wishlist {
 
 model WishlistItem {
   id         BigInt   @id @default(autoincrement())
-  wishlistId BigInt
-  productId  BigInt
-  variantId  BigInt?
-  createdAt  DateTime @default(now())
+  wishlistId BigInt   @map("wishlist_id")
+  productId  BigInt   @map("product_id")
+  variantId  BigInt?  @map("variant_id")
+  createdAt  DateTime @map("created_at") @default(now())
 
   // Relations
   wishlist Wishlist       @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
@@ -216,15 +216,15 @@ model Coupon {
   code              String      @unique @db.VarChar(64)
   type              CouponType
   value             Decimal     @db.Decimal(12, 2)
-  minOrderAmount    Decimal?    @db.Decimal(12, 2)
-  maxDiscountAmount Decimal?    @db.Decimal(12, 2)
-  usageLimit        Int?
-  usedCount         Int         @default(0)
-  startsAt          DateTime?
-  endsAt            DateTime?
-  isActive          Boolean     @default(true)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  minOrderAmount    Decimal?    @map("min_order_amount") @db.Decimal(12, 2)
+  maxDiscountAmount Decimal?    @map("max_discount_amount") @db.Decimal(12, 2)
+  usageLimit        Int?        @map("usage_limit")
+  usedCount         Int         @map("used_count") @default(0)
+  startsAt          DateTime?   @map("starts_at")
+  endsAt            DateTime?   @map("ends_at")
+  isActive          Boolean     @map("is_active") @default(true)
+  createdAt         DateTime    @map("created_at") @default(now())
+  updatedAt         DateTime    @map("updated_at") @updatedAt
 
   @@map("coupons")
 }
@@ -232,19 +232,19 @@ model Coupon {
 // Đơn hàng
 model Order {
   id                      BigInt        @id @default(autoincrement())
-  orderCode               String        @unique @db.VarChar(32)
-  userId                  BigInt?
+  orderCode               String        @map("order_code") @unique @db.VarChar(32)
+  userId                  BigInt?       @map("user_id")
   status                  OrderStatus   @default(PENDING)
-  paymentStatus           OrderPaymentStatus @default(UNPAID)
-  paymentMethod           PaymentMethod @default(VNPAY)
-  subtotalAmount          Decimal       @default(0) @db.Decimal(12, 2)
-  discountAmount          Decimal       @default(0) @db.Decimal(12, 2)
-  shippingFee             Decimal       @default(0) @db.Decimal(12, 2)
-  totalAmount             Decimal       @default(0) @db.Decimal(12, 2)
-  shippingAddressSnapshot Json?
+  paymentStatus           OrderPaymentStatus @map("payment_status") @default(UNPAID)
+  paymentMethod           PaymentMethod @map("payment_method") @default(VNPAY)
+  subtotalAmount          Decimal       @map("subtotal_amount") @default(0) @db.Decimal(12, 2)
+  discountAmount          Decimal       @map("discount_amount") @default(0) @db.Decimal(12, 2)
+  shippingFee             Decimal       @map("shipping_fee") @default(0) @db.Decimal(12, 2)
+  totalAmount             Decimal       @map("total_amount") @default(0) @db.Decimal(12, 2)
+  shippingAddressSnapshot Json?         @map("shipping_address_snapshot")
   notes                   String?
-  createdAt               DateTime      @default(now())
-  updatedAt               DateTime      @updatedAt
+  createdAt               DateTime      @map("created_at") @default(now())
+  updatedAt               DateTime      @map("updated_at") @updatedAt
 
   // Relations
   user     User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -258,15 +258,15 @@ model Order {
 
 model OrderItem {
   id          BigInt  @id @default(autoincrement())
-  orderId     BigInt
-  productId   BigInt
-  variantId   BigInt?
-  productName String  @db.VarChar(191)
-  variantName String? @db.VarChar(191)
+  orderId     BigInt  @map("order_id")
+  productId   BigInt  @map("product_id")
+  variantId   BigInt? @map("variant_id")
+  productName String  @map("product_name") @db.VarChar(191)
+  variantName String? @map("variant_name") @db.VarChar(191)
   sku         String? @db.VarChar(64)
   quantity    Int
-  unitPrice   Decimal @db.Decimal(12, 2)
-  totalPrice  Decimal @db.Decimal(12, 2)
+  unitPrice   Decimal @map("unit_price") @db.Decimal(12, 2)
+  totalPrice  Decimal @map("total_price") @db.Decimal(12, 2)
 
   // Relations
   order   Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -280,14 +280,14 @@ model OrderItem {
 // Thanh toán
 model Payment {
   id        BigInt        @id @default(autoincrement())
-  orderId  BigInt      @unique
+  orderId  BigInt      @map("order_id") @unique
   provider PaymentProvider @default(VNPAY)
   amount   Decimal     @db.Decimal(12, 2)
   currency String      @default("VND") @db.Char(3)
   status   PaymentStatus @default(PENDING)
-  paidAt   DateTime?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  paidAt   DateTime?   @map("paid_at")
+  createdAt DateTime   @map("created_at") @default(now())
+  updatedAt DateTime   @map("updated_at") @updatedAt
 
   // Relations
   order           Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -298,18 +298,18 @@ model Payment {
 
 model VnpayTransaction {
   id                BigInt   @id @default(autoincrement())
-  paymentId         BigInt
-  vnpTxnRef         String   @db.VarChar(64)
-  vnpTransactionNo  String?  @db.VarChar(64)
-  vnpAmount         BigInt?
-  vnpBankCode       String?  @db.VarChar(32)
-  vnpResponseCode   String?  @db.VarChar(16)
-  vnpOrderInfo      String?  @db.VarChar(255)
-  vnpPayDate        String?  @db.VarChar(14)
-  vnpSecureHash     String?  @db.VarChar(255)
-  returnParamsRaw   String?
-  ipnParamsRaw      String?
-  createdAt         DateTime @default(now())
+  paymentId         BigInt   @map("payment_id")
+  vnpTxnRef         String   @map("vnp_TxnRef") @db.VarChar(64)
+  vnpTransactionNo   String?  @map("vnp_TransactionNo") @db.VarChar(64)
+  vnpAmount         BigInt?  @map("vnp_Amount")
+  vnpBankCode       String?  @map("vnp_BankCode") @db.VarChar(32)
+  vnpResponseCode   String?  @map("vnp_ResponseCode") @db.VarChar(16)
+  vnpOrderInfo      String?  @map("vnp_OrderInfo") @db.VarChar(255)
+  vnpPayDate        String?  @map("vnp_PayDate") @db.VarChar(14)
+  vnpSecureHash     String?  @map("vnp_SecureHash") @db.VarChar(255)
+  returnParamsRaw   String?  @map("return_params_raw")
+  ipnParamsRaw      String?  @map("ipn_params_raw")
+  createdAt         DateTime @map("created_at") @default(now())
 
   // Relations
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
@@ -322,14 +322,14 @@ model VnpayTransaction {
 // Đánh giá
 model Review {
   id         BigInt   @id @default(autoincrement())
-  userId     BigInt
-  productId  BigInt
-  orderId    BigInt?
+  userId     BigInt   @map("user_id")
+  productId  BigInt   @map("product_id")
+  orderId    BigInt?  @map("order_id")
   rating     Int      @db.TinyInt
   comment    String?
-  imagesJson Json?
-  isApproved Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  imagesJson Json?    @map("images_json")
+  isApproved Boolean  @map("is_approved") @default(false)
+  createdAt  DateTime @map("created_at") @default(now())
 
   // Relations
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -345,7 +345,7 @@ model Review {
 model Setting {
   key       String   @id @db.VarChar(128)
   value     String
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   @@map("settings")
 }

@@ -55,10 +55,16 @@ npm install
 CREATE DATABASE emo_nongsan CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-2. Import schema:
+2. Import schema và dữ liệu mẫu:
 ```bash
 mysql -u root -p emo_nongsan < schema_emo_nongsan.sql
 ```
+
+**Lưu ý**: File `schema_emo_nongsan.sql` đã bao gồm cả:
+- Schema database đầy đủ
+- Dữ liệu mẫu (5 danh mục, 25 sản phẩm, hình ảnh, variants, reviews)
+- Tài khoản admin mẫu: `admin@emonongsan.com` / `password123`
+- Tài khoản khách hàng mẫu: `customer@example.com` / `password123`
 
 3. Setup Prisma:
 ```bash

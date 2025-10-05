@@ -5,8 +5,73 @@ import { Button } from '@/components/ui/Button'
 import { ArrowRight, Star, Truck, Shield, Leaf } from 'lucide-react'
 import { useQuery } from 'react-query'
 import { productApi } from '@/services/api'
+import ProductSection from '@/components/ProductSection'
+import { useCart } from '@/contexts/CartContext'
+import toast from 'react-hot-toast'
 
 export default function Home() {
+  const { addToCart } = useCart()
+
+  // Load featured products
+  const { data: featuredProductsResp } = useQuery(
+    ['featured-products'],
+    () => productApi.getFeaturedProducts(25).then(r => r.data),
+    { keepPreviousData: true }
+  )
+
+  // Load categories
+  const { data: categoriesResp } = useQuery(
+    ['home-categories'],
+    () => productApi.getCategories().then(r => r.data),
+    { keepPreviousData: true }
+  )
+
+  // Load products for first 4 categories individually
+  const categories = categoriesResp?.data || []
+  
+  const { data: category1Products } = useQuery(
+    ['products-by-category', categories[0]?.slug],
+    () => categories[0] ? productApi.getProductsByCategory(categories[0].slug, 5).then(r => r.data) : Promise.resolve(null),
+    { keepPreviousData: true, enabled: !!categories[0] }
+  )
+
+  const { data: category2Products } = useQuery(
+    ['products-by-category', categories[1]?.slug],
+    () => categories[1] ? productApi.getProductsByCategory(categories[1].slug, 5).then(r => r.data) : Promise.resolve(null),
+    { keepPreviousData: true, enabled: !!categories[1] }
+  )
+
+  const { data: category3Products } = useQuery(
+    ['products-by-category', categories[2]?.slug],
+    () => categories[2] ? productApi.getProductsByCategory(categories[2].slug, 5).then(r => r.data) : Promise.resolve(null),
+    { keepPreviousData: true, enabled: !!categories[2] }
+  )
+
+  const { data: category4Products } = useQuery(
+    ['products-by-category', categories[3]?.slug],
+    () => categories[3] ? productApi.getProductsByCategory(categories[3].slug, 5).then(r => r.data) : Promise.resolve(null),
+    { keepPreviousData: true, enabled: !!categories[3] }
+  )
+
+  const handleAddToCart = async (productId: number, variantId: number | null) => {
+    try {
+      await addToCart(productId, variantId, 1)
+      toast.success('Đã thêm vào giỏ hàng!')
+    } catch (error) {
+      toast.error('Không thể thêm vào giỏ hàng')
+    }
+  }
+
+  const featuredProducts = featuredProductsResp?.data?.products || []
+
+  // Prepare category data for rendering
+  const categoryData = [
+    { category: categories[0], products: category1Products?.data?.products || [] },
+    { category: categories[1], products: category2Products?.data?.products || [] },
+    { category: categories[2], products: category3Products?.data?.products || [] },
+    { category: categories[3], products: category4Products?.data?.products || [] }
+  ].filter(item => item.category && item.products.length > 0)
+
   return (
     <div className="space-y-16">
       {/* Hero Section */}
@@ -131,36 +196,60 @@ export default function Home() {
               Khám phá đa dạng các loại nông sản tươi ngon
             </p>
           </div>
-          {(() => {
-            const { data } = useQuery(['home-categories'], () => productApi.getCategories().then(r => r.data))
-            const categories = (data?.data || []).slice(0, 6)
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
+            {categories.slice(0, 5).map((c: any) => {
+              const pickEmoji = (slug: string) => {
+                if (!slug) return '🛒'
+                if (slug.includes('rau')) return '🥬'
+                if (slug.includes('trai') || slug.includes('tao')) return '🍎'
+                if (slug.includes('dac') || slug.includes('san')) return '🌽'
+                if (slug.includes('huu') || slug.includes('co')) return '🌱'
+                if (slug.includes('gia') || slug.includes('vi')) return '🌿'
+                return '🛒'
+              }
 
-            const pickEmoji = (slug: string) => {
-              if (!slug) return '🛒'
-              if (slug.includes('rau')) return '🥬'
-              if (slug.includes('trai') || slug.includes('tao')) return '🍎'
-              if (slug.includes('dac') || slug.includes('san')) return '🌽'
-              return '🛒'
-            }
-
-            return (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {categories.map((c: any) => (
-                  <Link key={c.id} to={`/products?category=${encodeURIComponent(c.slug)}`}>
-                    <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                      <div className="aspect-w-16 aspect-h-9 bg-gradient-to-r from-green-400 to-blue-600 rounded-lg mb-4 flex items-center justify-center">
-                        <span className="text-6xl">{pickEmoji(c.slug)}</span>
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{c.name}</h3>
-                      <p className="text-gray-600">{c.description || 'Khám phá sản phẩm nổi bật'}</p>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            )
-          })()}
+              return (
+                <Link key={c.id} to={`/products?category=${encodeURIComponent(c.slug)}`}>
+                  <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div className="aspect-w-16 aspect-h-9 bg-gradient-to-r from-green-400 to-blue-600 rounded-lg mb-4 flex items-center justify-center">
+                      <span className="text-6xl">{pickEmoji(c.slug)}</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{c.name}</h3>
+                    <p className="text-gray-600">{c.description || 'Khám phá sản phẩm nổi bật'}</p>
+                  </Card>
+                </Link>
+              )
+            })}
+          </div>
         </div>
       </section>
+
+      {/* Featured Products Section */}
+      <ProductSection
+        title="Sản Phẩm Nổi Bật"
+        subtitle="Những sản phẩm được yêu thích nhất"
+        products={featuredProducts}
+        onAddToCart={handleAddToCart}
+      />
+
+      {/* Products by Category Sections */}
+      {categoryData.map((item) => {
+        const { category, products } = item
+        
+        if (!category || products.length === 0) return null
+
+        return (
+          <ProductSection
+            key={category.slug}
+            title={category.name}
+            subtitle={category.description || 'Khám phá sản phẩm đa dạng'}
+            products={products}
+            categorySlug={category.slug}
+            onAddToCart={handleAddToCart}
+          />
+        )
+      })}
 
       {/* Testimonials Section */}
       <section className="py-16 bg-white">

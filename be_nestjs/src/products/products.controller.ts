@@ -22,4 +22,19 @@ export class ProductsController {
   async detail(@Param('id') id: string) {
     return this.productsService.detail(Number(id));
   }
+
+  @Get('featured')
+  async getFeaturedProducts(@Query('limit') limit?: string) {
+    const limitNum = limit ? Number(limit) : 25;
+    return this.productsService.getFeaturedProducts(limitNum);
+  }
+
+  @Get('category/:categorySlug')
+  async getProductsByCategory(
+    @Param('categorySlug') categorySlug: string,
+    @Query('limit') limit?: string
+  ) {
+    const limitNum = limit ? Number(limit) : 5;
+    return this.productsService.getProductsByCategory(categorySlug, limitNum);
+  }
 }

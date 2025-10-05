@@ -99,6 +99,13 @@ export const productApi = {
   // Lấy chi tiết sản phẩm
   getProduct: (id: number) => api.get(`/products/${id}`),
   
+  // Lấy sản phẩm nổi bật
+  getFeaturedProducts: (limit?: number) => api.get('/products/featured', { params: { limit } }),
+  
+  // Lấy sản phẩm theo danh mục
+  getProductsByCategory: (categorySlug: string, limit?: number) => 
+    api.get(`/products/category/${categorySlug}`, { params: { limit } }),
+  
   // Lấy danh mục
   getCategories: () => api.get('/categories'),
   

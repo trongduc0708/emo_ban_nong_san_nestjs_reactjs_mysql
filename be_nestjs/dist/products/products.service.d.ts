@@ -41,9 +41,9 @@ export declare class ProductsService {
                     unitLabel: string | null;
                     stockQuantity: number;
                 }[];
+                name: string;
                 createdAt: Date;
                 updatedAt: Date;
-                name: string;
                 slug: string;
                 sku: string | null;
                 description: string | null;
@@ -120,9 +120,9 @@ export declare class ProductsService {
                 productId: bigint;
                 imageUrl: string;
             }[];
+            name: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
             slug: string;
             sku: string | null;
             description: string | null;
@@ -130,5 +130,102 @@ export declare class ProductsService {
             isActive: boolean;
         };
         error?: undefined;
+    }>;
+    getFeaturedProducts(limit?: number): Promise<{
+        success: boolean;
+        data: {
+            products: {
+                id: number;
+                categoryId: number | null;
+                category: {
+                    id: number;
+                    parentId: number | null;
+                    name: string;
+                    slug: string;
+                    description: string | null;
+                    isActive: boolean;
+                    position: number;
+                } | null;
+                images: {
+                    id: bigint;
+                    position: number;
+                    productId: bigint;
+                    imageUrl: string;
+                }[];
+                variants: {
+                    id: number;
+                    productId: number;
+                    price: number;
+                    compareAtPrice: number | null;
+                    isActive: boolean;
+                    variantName: string;
+                    unitLabel: string | null;
+                    stockQuantity: number;
+                }[];
+                avgRating: number;
+                reviewCount: number;
+                reviews: {
+                    rating: number;
+                }[];
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                slug: string;
+                sku: string | null;
+                description: string | null;
+                origin: string | null;
+                isActive: boolean;
+            }[];
+            total: number;
+        };
+    }>;
+    getProductsByCategory(categorySlug: string, limit?: number): Promise<{
+        success: boolean;
+        data: {
+            products: {
+                id: number;
+                categoryId: number | null;
+                category: {
+                    id: number;
+                    parentId: number | null;
+                    name: string;
+                    slug: string;
+                    description: string | null;
+                    isActive: boolean;
+                    position: number;
+                } | null;
+                images: {
+                    id: bigint;
+                    position: number;
+                    productId: bigint;
+                    imageUrl: string;
+                }[];
+                variants: {
+                    id: number;
+                    productId: number;
+                    price: number;
+                    compareAtPrice: number | null;
+                    isActive: boolean;
+                    variantName: string;
+                    unitLabel: string | null;
+                    stockQuantity: number;
+                }[];
+                avgRating: number;
+                reviewCount: number;
+                reviews: {
+                    rating: number;
+                }[];
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                slug: string;
+                sku: string | null;
+                description: string | null;
+                origin: string | null;
+                isActive: boolean;
+            }[];
+            categorySlug: string;
+            total: number;
+        };
     }>;
 }
