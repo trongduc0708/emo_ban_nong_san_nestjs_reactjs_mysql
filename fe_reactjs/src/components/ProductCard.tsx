@@ -2,7 +2,9 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Star, ShoppingCart } from 'lucide-react'
+import { Star, ShoppingCart, Heart } from 'lucide-react'
+import { useWishlist } from '@/contexts/WishlistContext'
+import toast from 'react-hot-toast'
 
 interface ProductCardProps {
   product: {
@@ -32,6 +34,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   const mainVariant = product.variants[0]
   const price = mainVariant?.price || 0
   const comparePrice = mainVariant?.compareAtPrice
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
 
   const handleAddToCart = () => {
     if (onAddToCart) {
@@ -39,9 +42,31 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
     }
   }
 
+  const handleWishlistToggle = async () => {
+    console.log('🔍 handleWishlistToggle called for product:', product.id)
+    console.log('🔍 isInWishlist:', isInWishlist(product.id))
+    console.log('🔍 localStorage token:', localStorage.getItem('token'))
+    console.log('🔍 localStorage user:', localStorage.getItem('user'))
+    
+    try {
+      if (isInWishlist(product.id)) {
+        console.log('📤 Removing from wishlist...')
+        await removeFromWishlist(product.id)
+        toast.success('Đã xóa khỏi danh sách yêu thích!')
+      } else {
+        console.log('📤 Adding to wishlist...')
+        await addToWishlist(product.id)
+        toast.success('Đã thêm vào danh sách yêu thích!')
+      }
+    } catch (error: any) {
+      console.error('❌ Error in handleWishlistToggle:', error)
+      toast.error(error.message || 'Có lỗi xảy ra')
+    }
+  }
+
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col">
-      <div className="aspect-w-16 aspect-h-12 mb-4 overflow-hidden rounded-lg">
+      <div className="aspect-w-16 aspect-h-12 mb-4 overflow-hidden rounded-lg relative">
         <Link to={`/products/${product.id}`}>
           <img
             src={mainImage}
@@ -49,6 +74,17 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
           />
         </Link>
+        <Button
+          size="sm"
+          onClick={handleWishlistToggle}
+          className={`absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
+            isInWishlist(product.id) 
+              ? 'bg-red-500 hover:bg-red-600 text-white' 
+              : 'bg-white hover:bg-gray-50 text-gray-600'
+          }`}
+        >
+          <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+        </Button>
       </div>
       
       <div className="p-4 space-y-3 flex-1 flex flex-col">

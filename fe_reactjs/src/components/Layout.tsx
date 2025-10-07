@@ -2,7 +2,8 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
-import { ShoppingCart, User, LogOut, Menu, X } from 'lucide-react'
+import { useWishlist } from '@/contexts/WishlistContext'
+import { ShoppingCart, User, LogOut, Menu, X, Heart } from 'lucide-react'
 import { useState } from 'react'
 
 interface LayoutProps {
@@ -12,6 +13,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth()
   const { totalItems } = useCart()
+  const { wishlistItems } = useWishlist()
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -72,6 +74,21 @@ export default function Layout({ children }: LayoutProps) {
                 }`}
               >
                 Chính sách
+              </Link>
+              <Link
+                to="/wishlist"
+                className={`relative px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/wishlist') 
+                    ? 'text-green-600 bg-green-50' 
+                    : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+                }`}
+              >
+                <Heart className="w-5 h-5" />
+                {wishlistItems.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {wishlistItems.length}
+                  </span>
+                )}
               </Link>
               <Link
                 to="/cart"

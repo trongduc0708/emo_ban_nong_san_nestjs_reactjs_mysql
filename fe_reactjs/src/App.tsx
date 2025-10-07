@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
+import { WishlistProvider } from '@/contexts/WishlistContext'
 import Layout from '@/components/Layout'
 import AppWrapper from '@/components/AppWrapper'
 import Home from '@/pages/Home'
@@ -16,6 +17,7 @@ import Profile from '@/pages/Profile'
 import Orders from '@/pages/Orders'
 import OrderDetail from '@/pages/OrderDetail'
 import OrderSuccess from '@/pages/OrderSuccess'
+import Wishlist from '@/pages/Wishlist'
 import AdminDashboard from '@/pages/admin/Dashboard'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import About from '@/pages/About'
@@ -25,7 +27,8 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <AppWrapper>
+        <WishlistProvider>
+          <AppWrapper>
           <Layout>
             <Routes>
             {/* Trang công khai */}
@@ -63,6 +66,11 @@ function App() {
                 <OrderDetail />
               </ProtectedRoute>
             } />
+            <Route path="/wishlist" element={
+              <ProtectedRoute>
+                <Wishlist />
+              </ProtectedRoute>
+            } />
             <Route path="/order-success/:orderId" element={
               <ProtectedRoute>
                 <OrderSuccess />
@@ -77,7 +85,8 @@ function App() {
             } />
             </Routes>
           </Layout>
-        </AppWrapper>
+          </AppWrapper>
+        </WishlistProvider>
       </CartProvider>
     </AuthProvider>
   )

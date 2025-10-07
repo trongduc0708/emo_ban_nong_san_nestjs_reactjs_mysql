@@ -138,14 +138,13 @@ export const productApi = {
   removeFromCart: (itemId: number) => api.delete(`/cart/items/${itemId}`),
   clearCart: () => api.delete('/cart'),
   
-  // Yêu thích
+}
+
+// API cho Wishlist (yêu thích) 
+export const wishlistApi = {
   getWishlist: () => api.get('/wishlist'),
-  addToWishlist: (data: {
-    productId: number
-    variantId?: number | null
-  }) => api.post('/wishlist/items', data),
-  removeFromWishlist: (itemId: number) =>
-    api.delete(`/wishlist/items/${itemId}`),
+  addToWishlist: (productId: number) => api.post('/wishlist', { productId }),
+  removeFromWishlist: (productId: number) => api.delete(`/wishlist/${productId}`),
 }
 
 // API cho Orders

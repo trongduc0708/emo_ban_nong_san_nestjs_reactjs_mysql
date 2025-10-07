@@ -7,6 +7,7 @@ import { Star, Heart, Share2, Truck, Shield, RotateCcw, ShoppingCart, Loader2 } 
 import { useQuery } from 'react-query'
 import { productApi } from '@/services/api'
 import { useCart } from '@/contexts/CartContext'
+import { useWishlist } from '@/contexts/WishlistContext'
 import toast from 'react-hot-toast'
 
 export default function ProductDetail() {
@@ -17,6 +18,7 @@ export default function ProductDetail() {
   const [addingToCart, setAddingToCart] = useState(false)
   
   const { addToCart } = useCart()
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
 
   const productId = useMemo(() => Number(id), [id])
   const { data, isLoading } = useQuery([
@@ -34,6 +36,29 @@ export default function ProductDetail() {
     comment: r.comment,
     date: new Date(r.createdAt || Date.now()).toLocaleDateString('vi-VN')
   }))
+
+  // Handle wishlist toggle
+  const handleWishlistToggle = async () => {
+    console.log('🔍 ProductDetail handleWishlistToggle called for product:', product?.id)
+    console.log('🔍 isInWishlist:', isInWishlist(product?.id))
+    
+    if (!product) return
+    
+    try {
+      if (isInWishlist(product.id)) {
+        console.log('📤 Removing from wishlist...')
+        await removeFromWishlist(product.id)
+        toast.success('Đã xóa khỏi danh sách yêu thích!')
+      } else {
+        console.log('📤 Adding to wishlist...')
+        await addToWishlist(product.id)
+        toast.success('Đã thêm vào danh sách yêu thích!')
+      }
+    } catch (error: any) {
+      console.error('❌ Error in handleWishlistToggle:', error)
+      toast.error(error.message || 'Có lỗi xảy ra')
+    }
+  }
 
   // Handle add to cart
   const handleAddToCart = async () => {
@@ -185,8 +210,17 @@ export default function ProductDetail() {
                 </>
               )}
             </Button>
-            <Button variant="outline" size="lg">
-              <Heart className="w-5 h-5" />
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={handleWishlistToggle}
+              className={`${
+                isInWishlist(product?.id) 
+                  ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100' 
+                  : 'hover:bg-gray-50'
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${isInWishlist(product?.id) ? 'fill-current' : ''}`} />
             </Button>
             <Button variant="outline" size="lg">
               <Share2 className="w-5 h-5" />
