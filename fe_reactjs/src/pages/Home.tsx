@@ -58,7 +58,7 @@ export default function Home() {
       await addToCart(productId, variantId, 1)
       toast.success('Đã thêm vào giỏ hàng!')
     } catch (error) {
-      toast.error('Không thể thêm vào giỏ hàng')
+      toast.error('Không thể thêm vào giỏ hàng. Cần Phải Đăng Nhập')
     }
   }
 
@@ -211,12 +211,14 @@ export default function Home() {
 
               return (
                 <Link key={c.id} to={`/products?category=${encodeURIComponent(c.slug)}`}>
-                  <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                  <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 h-full flex flex-col">
                     <div className="aspect-w-16 aspect-h-9 bg-gradient-to-r from-green-400 to-blue-600 rounded-lg mb-4 flex items-center justify-center">
                       <span className="text-6xl">{pickEmoji(c.slug)}</span>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{c.name}</h3>
-                    <p className="text-gray-600">{c.description || 'Khám phá sản phẩm nổi bật'}</p>
+                    <div className="flex-1 flex flex-col">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{c.name}</h3>
+                      <p className="text-gray-600 flex-1">{c.description || 'Khám phá sản phẩm nổi bật'}</p>
+                    </div>
                   </Card>
                 </Link>
               )

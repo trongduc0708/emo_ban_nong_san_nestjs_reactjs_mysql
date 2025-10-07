@@ -40,7 +40,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   }
 
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <Card className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col">
       <div className="aspect-w-16 aspect-h-12 mb-4 overflow-hidden rounded-lg">
         <Link to={`/products/${product.id}`}>
           <img
@@ -51,8 +51,8 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
         </Link>
       </div>
       
-      <div className="p-4 space-y-3">
-        <div>
+      <div className="p-4 space-y-3 flex-1 flex flex-col">
+        <div className="flex-1">
           <Link to={`/products/${product.id}`}>
             <h3 className="font-semibold text-gray-900 line-clamp-2 hover:text-green-600 transition-colors group-hover:text-green-600">
               {product.name}
@@ -83,7 +83,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
         </div>
 
         {/* Price */}
-        <div className="flex items-center justify-between">
+        <div className="mt-auto">
           <div className="flex items-center space-x-2">
             <span className="text-lg font-bold text-green-600">
               {price.toLocaleString('vi-VN')}₫
@@ -94,22 +94,23 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
               </span>
             )}
           </div>
-          
-          <Button
-            size="sm"
-            onClick={handleAddToCart}
-            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-          >
-            <ShoppingCart className="w-4 h-4 mr-1" />
-            Thêm
-          </Button>
         </div>
 
-        {/* Variant info */}
+        {/* Variant info and Button */}
         {mainVariant && (
-          <p className="text-xs text-gray-500">
-            {mainVariant.variantName}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-500">
+              {mainVariant.variantName}
+            </p>
+            <Button
+              size="sm"
+              onClick={handleAddToCart}
+              className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center space-x-1"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span>Thêm</span>
+            </Button>
+          </div>
         )}
       </div>
     </Card>

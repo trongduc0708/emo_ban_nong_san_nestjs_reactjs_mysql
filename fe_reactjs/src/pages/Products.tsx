@@ -160,7 +160,7 @@ export default function Products() {
           : 'space-y-4'
       }>
         {products.map((product: any) => (
-          <Card key={product.id} className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <Card key={product.id} className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col">
             {viewMode === 'grid' ? (
               // Grid View
               <>
@@ -173,24 +173,26 @@ export default function Products() {
                     />
                   </Link>
                 </div>
-                <div className="space-y-2">
-                  <Link to={`/products/${product.id}`}>
-                    <h3 className="font-semibold text-gray-900 line-clamp-2 hover:text-green-600 transition-colors">
-                      {product.name}
-                    </h3>
-                  </Link>
-                  <p className="text-sm text-gray-500">{product.category?.name}</p>
-                  <div className="flex items-center space-x-1">
-                    <div className="flex text-yellow-400">
-                      {[...Array(5)].map((_, i) => (
-                        <span key={i} className="text-sm">★</span>
-                      ))}
+                <div className="space-y-2 flex-1 flex flex-col">
+                  <div className="flex-1">
+                    <Link to={`/products/${product.id}`}>
+                      <h3 className="font-semibold text-gray-900 line-clamp-2 hover:text-green-600 transition-colors">
+                        {product.name}
+                      </h3>
+                    </Link>
+                    <p className="text-sm text-gray-500">{product.category?.name}</p>
+                    <div className="flex items-center space-x-1">
+                      <div className="flex text-yellow-400">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} className="text-sm">★</span>
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {(product.avgRating ?? 5).toFixed(1)}
+                      </span>
                     </div>
-                    <span className="text-sm text-gray-500">
-                      {(product.avgRating ?? 5).toFixed(1)}
-                    </span>
                   </div>
-                  <div className="space-y-2">
+                  <div className="mt-auto">
                     <div className="flex items-center space-x-2">
                       <span className="text-xl font-bold text-green-600">
                         {(product.variants?.[0]?.price ?? 0).toLocaleString('vi-VN')}₫
@@ -201,24 +203,31 @@ export default function Products() {
                         </span>
                       )}
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleAddToCart(product)}
-                      disabled={addingToCart === product.id}
-                      className="w-full flex items-center justify-center space-x-2"
-                    >
-                      {addingToCart === product.id ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Đang thêm...</span>
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="w-4 h-4" />
-                          <span>Thêm vào giỏ</span>
-                        </>
-                      )}
-                    </Button>
+                    {product.variants?.[0] && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-gray-500">
+                          {product.variants[0].variantName}
+                        </p>
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleAddToCart(product)}
+                          disabled={addingToCart === product.id}
+                          className="flex items-center space-x-2"
+                        >
+                          {addingToCart === product.id ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Đang thêm...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingCart className="w-4 h-4" />
+                              <span>Thêm</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
