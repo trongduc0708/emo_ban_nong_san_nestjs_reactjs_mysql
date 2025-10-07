@@ -42,13 +42,13 @@ export declare class ProductsService {
                     stockQuantity: number;
                 }[];
                 name: string;
-                createdAt: Date;
-                updatedAt: Date;
                 slug: string;
                 sku: string | null;
                 description: string | null;
                 origin: string | null;
                 isActive: boolean;
+                createdAt: Date;
+                updatedAt: Date;
             }[];
             pagination: {
                 page: number;
@@ -95,9 +95,9 @@ export declare class ProductsService {
             } & {
                 id: bigint;
                 createdAt: Date;
-                userId: bigint;
                 productId: bigint;
                 isApproved: boolean;
+                userId: bigint;
                 orderId: bigint | null;
                 rating: number;
                 comment: string | null;
@@ -121,13 +121,13 @@ export declare class ProductsService {
                 imageUrl: string;
             }[];
             name: string;
-            createdAt: Date;
-            updatedAt: Date;
             slug: string;
             sku: string | null;
             description: string | null;
             origin: string | null;
             isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
         };
         error?: undefined;
     }>;
@@ -168,13 +168,13 @@ export declare class ProductsService {
                     rating: number;
                 }[];
                 name: string;
-                createdAt: Date;
-                updatedAt: Date;
                 slug: string;
                 sku: string | null;
                 description: string | null;
                 origin: string | null;
                 isActive: boolean;
+                createdAt: Date;
+                updatedAt: Date;
             }[];
             total: number;
         };
@@ -216,16 +216,22 @@ export declare class ProductsService {
                     rating: number;
                 }[];
                 name: string;
-                createdAt: Date;
-                updatedAt: Date;
                 slug: string;
                 sku: string | null;
                 description: string | null;
                 origin: string | null;
                 isActive: boolean;
+                createdAt: Date;
+                updatedAt: Date;
             }[];
             categorySlug: string;
             total: number;
         };
+    }>;
+    addProductImage(productId: number, imageUrl: string, position: number): Promise<{
+        id: number;
+        productId: number;
+        imageUrl: string;
+        position: number;
     }>;
 }

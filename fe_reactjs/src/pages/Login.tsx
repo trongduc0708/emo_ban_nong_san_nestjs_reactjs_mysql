@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { useAuth } from '@/contexts/AuthContext'
 import { authApi } from '@/services/api'
 import { Button } from '@/components/ui/Button'
@@ -10,35 +9,72 @@ import { GoogleButton } from '@/components/auth/GoogleButton'
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-interface LoginFormData {
-  email: string
-  password: string
-}
-
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
+  const [errors, setErrors] = useState({
+    email: '',
+    password: ''
+  })
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<LoginFormData>()
+  // Validate form
+  const validateForm = () => {
+    const newErrors = { email: '', password: '' }
+    let isValid = true
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email là bắt buộc'
+      isValid = false
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
+      newErrors.email = 'Email không hợp lệ'
+      isValid = false
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = 'Mật khẩu là bắt buộc'
+      isValid = false
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự'
+      isValid = false
+    }
+
+    setErrors(newErrors)
+    return isValid
+  }
 
   // Xử lý đăng nhập thông thường
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
     try {
       setIsLoading(true)
-      await login(data.email, data.password)
+      await login(formData.email, formData.password)
       toast.success('Đăng nhập thành công!')
       navigate('/')
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Đăng nhập thất bại')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Handle input change
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    // Clear error when user starts typing
+    if (errors[field as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [field]: '' }))
     }
   }
 
@@ -124,20 +160,15 @@ export default function Login() {
           </div>
 
           {/* Email/Password Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-4">
             <Input
               label="Email"
               type="email"
               placeholder="Nhập email của bạn"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
               icon={<Mail className="w-5 h-5" />}
-              {...register('email', {
-                required: 'Email là bắt buộc',
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Email không hợp lệ'
-                }
-              })}
-              error={errors.email?.message}
+              error={errors.email}
             />
 
             <div className="relative">
@@ -145,15 +176,10 @@ export default function Login() {
                 label="Mật khẩu"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Nhập mật khẩu"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
                 icon={<Lock className="w-5 h-5" />}
-                {...register('password', {
-                  required: 'Mật khẩu là bắt buộc',
-                  minLength: {
-                    value: 6,
-                    message: 'Mật khẩu phải có ít nhất 6 ký tự'
-                  }
-                })}
-                error={errors.password?.message}
+                error={errors.password}
               />
               <button
                 type="button"

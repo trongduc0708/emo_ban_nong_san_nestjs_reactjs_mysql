@@ -167,7 +167,7 @@ export default function Products() {
                 <div className="aspect-w-16 aspect-h-12 mb-4">
                   <Link to={`/products/${product.id}`}>
                     <img
-                      src={product.images?.[0]?.imageUrl || 'https://picsum.photos/seed/emo/800/600'}
+                      src={product.images?.[0]?.imageUrl || '/uploads/products/placeholder.jpg'}
                       alt={product.name}
                       className="w-full h-48 object-cover rounded-lg"
                     />
@@ -190,15 +190,22 @@ export default function Products() {
                       {(product.avgRating ?? 5).toFixed(1)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-green-600">
-                      {(product.variants?.[0]?.price ?? 0).toLocaleString('vi-VN')}₫
-                    </span>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xl font-bold text-green-600">
+                        {(product.variants?.[0]?.price ?? 0).toLocaleString('vi-VN')}₫
+                      </span>
+                      {product.variants?.[0]?.compareAtPrice && (
+                        <span className="text-sm text-gray-500 line-through">
+                          {product.variants[0].compareAtPrice.toLocaleString('vi-VN')}₫
+                        </span>
+                      )}
+                    </div>
                     <Button 
                       size="sm" 
                       onClick={() => handleAddToCart(product)}
                       disabled={addingToCart === product.id}
-                      className="flex items-center space-x-2"
+                      className="w-full flex items-center justify-center space-x-2"
                     >
                       {addingToCart === product.id ? (
                         <>
@@ -220,7 +227,7 @@ export default function Products() {
               <div className="flex gap-4">
                 <Link to={`/products/${product.id}`}>
                   <img
-                    src={product.images?.[0]?.imageUrl || 'https://picsum.photos/seed/emo/800/600'}
+                    src={product.images?.[0]?.imageUrl || '/uploads/products/placeholder.jpg'}
                     alt={product.name}
                     className="w-32 h-32 object-cover rounded-lg"
                   />

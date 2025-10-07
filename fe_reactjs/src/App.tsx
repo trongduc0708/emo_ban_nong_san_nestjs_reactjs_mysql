@@ -14,6 +14,7 @@ import ForgotPassword from '@/pages/ForgotPassword'
 import ResetPassword from '@/pages/ResetPassword'
 import Profile from '@/pages/Profile'
 import Orders from '@/pages/Orders'
+import OrderDetail from '@/pages/OrderDetail'
 import OrderSuccess from '@/pages/OrderSuccess'
 import AdminDashboard from '@/pages/admin/Dashboard'
 import ProtectedRoute from '@/components/ProtectedRoute'
@@ -55,6 +56,11 @@ function App() {
             <Route path="/orders" element={
               <ProtectedRoute>
                 <Orders />
+              </ProtectedRoute>
+            } />
+            <Route path="/orders/:id" element={
+              <ProtectedRoute>
+                <OrderDetail />
               </ProtectedRoute>
             } />
             <Route path="/order-success/:orderId" element={

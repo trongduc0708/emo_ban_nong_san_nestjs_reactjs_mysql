@@ -239,6 +239,21 @@ let ProductsService = class ProductsService {
             }
         };
     }
+    async addProductImage(productId, imageUrl, position) {
+        const productImage = await this.prisma.productImage.create({
+            data: {
+                productId: BigInt(productId),
+                imageUrl,
+                position,
+            },
+        });
+        return {
+            id: Number(productImage.id),
+            productId: Number(productImage.productId),
+            imageUrl: productImage.imageUrl,
+            position: productImage.position,
+        };
+    }
 };
 exports.ProductsService = ProductsService;
 exports.ProductsService = ProductsService = __decorate([

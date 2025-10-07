@@ -28,7 +28,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
-  const mainImage = product.images[0]?.imageUrl || 'https://picsum.photos/seed/emo/400/300'
+  const mainImage = product.images[0]?.imageUrl || '/uploads/products/placeholder.jpg'
   const mainVariant = product.variants[0]
   const price = mainVariant?.price || 0
   const comparePrice = mainVariant?.compareAtPrice

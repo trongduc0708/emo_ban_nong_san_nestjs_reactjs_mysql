@@ -24,23 +24,30 @@ let CartController = class CartController {
         this.cartService = cartService;
     }
     async getCart(req) {
-        const userId = Number(req.user?.userId);
+        console.log('Cart - req.user:', req.user);
+        console.log('Cart - req.user.id:', req.user?.id);
+        console.log('Cart - typeof req.user.id:', typeof req.user?.id);
+        const userId = Number(req.user?.id);
+        console.log('Cart - userId after Number():', userId);
+        if (isNaN(userId)) {
+            throw new common_1.BadRequestException('Invalid user ID');
+        }
         return this.cartService.getCart(userId);
     }
     async addToCart(req, dto) {
-        const userId = Number(req.user?.userId);
+        const userId = Number(req.user?.id);
         return this.cartService.addToCart(userId, dto);
     }
     async updateCartItem(req, id, dto) {
-        const userId = Number(req.user?.userId);
+        const userId = Number(req.user?.id);
         return this.cartService.updateCartItem(userId, Number(id), dto);
     }
     async removeFromCart(req, id) {
-        const userId = Number(req.user?.userId);
+        const userId = Number(req.user?.id);
         return this.cartService.removeFromCart(userId, Number(id));
     }
     async clearCart(req) {
-        const userId = Number(req.user?.userId);
+        const userId = Number(req.user?.id);
         return this.cartService.clearCart(userId);
     }
 };

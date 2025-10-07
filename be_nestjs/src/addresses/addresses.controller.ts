@@ -14,7 +14,7 @@ export class AddressesController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async list(@Req() req: any) {
-    const userId = Number(req.user?.userId);
+    const userId = Number(req.user?.id);
     return this.service.list(userId);
   }
 
@@ -25,7 +25,7 @@ export class AddressesController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Req() req: any, @Body() dto: any) {
-    const userId = Number(req.user?.userId);
+    const userId = Number(req.user?.id);
     return this.service.create(userId, dto);
   }
 
@@ -37,7 +37,7 @@ export class AddressesController {
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(@Req() req: any, @Param('id') id: string, @Body() dto: any) {
-    const userId = Number(req.user?.userId);
+    const userId = Number(req.user?.id);
     return this.service.update(userId, Number(id), dto);
   }
 
@@ -47,7 +47,7 @@ export class AddressesController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(@Req() req: any, @Param('id') id: string) {
-    const userId = Number(req.user?.userId);
+    const userId = Number(req.user?.id);
     return this.service.remove(userId, Number(id));
   }
 }

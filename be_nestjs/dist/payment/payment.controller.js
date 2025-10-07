@@ -23,11 +23,11 @@ let PaymentController = class PaymentController {
         this.paymentService = paymentService;
     }
     async processPayment(req, dto) {
-        const userId = Number(req.user?.userId);
+        const userId = Number(req.user?.id);
         return this.paymentService.processPayment(userId, dto);
     }
     async getOrderHistory(req) {
-        const userId = Number(req.user?.userId);
+        const userId = Number(req.user?.id);
         return this.paymentService.getOrderHistory(userId);
     }
 };

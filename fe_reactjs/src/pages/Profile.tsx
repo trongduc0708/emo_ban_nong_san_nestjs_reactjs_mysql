@@ -1,26 +1,34 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { User, Mail, Phone, MapPin, Edit3, Save, X, Plus, Trash2, Package, Heart, Key } from 'lucide-react'
-import { addressesApi } from '@/services/api'
+import { User, Mail, Phone, MapPin, Edit3, Save, X, Plus, Trash2, Package, Heart, Key, Camera, Upload } from 'lucide-react'
+import { addressesApi, authApi } from '@/services/api'
+import toast from 'react-hot-toast'
 
 export default function Profile() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, setUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [addressOpenTick, setAddressOpenTick] = useState(0)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
     phone: user?.phone || ''
   })
 
-  const handleSave = () => {
-    // TODO: Gọi API cập nhật profile
-    setIsEditing(false)
+  const handleSave = async () => {
+    try {
+      // TODO: Gọi API cập nhật profile
+      setIsEditing(false)
+      toast.success('Cập nhật thông tin thành công')
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi cập nhật thông tin')
+    }
   }
 
   const handleCancel = () => {
@@ -30,6 +38,52 @@ export default function Profile() {
       phone: user?.phone || ''
     })
     setIsEditing(false)
+  }
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn file ảnh')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Kích thước file không được vượt quá 5MB')
+      return
+    }
+
+    try {
+      setUploadingAvatar(true)
+      
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('avatar', file)
+      
+      // Upload avatar using multipart/form-data
+      const response = await authApi.uploadAvatar(formData)
+      
+      // Update user context
+      if (response.data.success && setUser) {
+        setUser({
+          ...user!,
+          avatarUrl: response.data.data.avatarUrl
+        })
+        toast.success('Cập nhật ảnh đại diện thành công')
+      }
+    } catch (error: any) {
+      console.error('Lỗi upload avatar:', error)
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi upload ảnh')
+    } finally {
+      setUploadingAvatar(false)
+    }
   }
 
   return (
@@ -122,16 +176,33 @@ export default function Profile() {
         <div className="lg:col-span-1 space-y-6">
           {/* Avatar */}
           <Card className="p-6 text-center">
-            <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center">
-              {user?.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt={user.fullName}
-                  className="w-24 h-24 rounded-full object-cover"
-                />
-              ) : (
-                <User className="w-12 h-12 text-gray-500" />
-              )}
+            <div className="relative">
+              <div 
+                className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center cursor-pointer hover:bg-gray-400 transition-colors"
+                onClick={handleAvatarClick}
+              >
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.fullName}
+                    className="w-24 h-24 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="w-12 h-12 text-gray-500" />
+                )}
+                {uploadingAvatar && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-white animate-spin" />
+                  </div>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               {user?.fullName}
@@ -139,8 +210,24 @@ export default function Profile() {
             <p className="text-gray-600 mb-4">
               {user?.email}
             </p>
-            <Button variant="outline" size="sm">
-              Thay đổi ảnh đại diện
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleAvatarClick}
+              disabled={uploadingAvatar}
+              className="flex items-center"
+            >
+              {uploadingAvatar ? (
+                <>
+                  <Upload className="w-4 h-4 mr-2 animate-spin" />
+                  Đang tải...
+                </>
+              ) : (
+                <>
+                  <Camera className="w-4 h-4 mr-2" />
+                  Thay đổi ảnh đại diện
+                </>
+              )}
             </Button>
           </Card>
 

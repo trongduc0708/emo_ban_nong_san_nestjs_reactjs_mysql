@@ -9,16 +9,6 @@ export declare class CartService {
         data: {
             id: number;
             items: ({
-                variant: {
-                    id: bigint;
-                    productId: bigint;
-                    variantName: string;
-                    unitLabel: string | null;
-                    price: import("@prisma/client/runtime/library").Decimal;
-                    compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
-                    stockQuantity: number;
-                    isActive: boolean;
-                } | null;
                 product: {
                     images: {
                         id: bigint;
@@ -27,23 +17,33 @@ export declare class CartService {
                         imageUrl: string;
                     }[];
                 } & {
+                    name: string;
                     id: bigint;
                     createdAt: Date;
                     updatedAt: Date;
-                    name: string;
-                    isActive: boolean;
                     categoryId: bigint | null;
                     slug: string;
                     sku: string | null;
                     description: string | null;
                     origin: string | null;
+                    isActive: boolean;
                 };
+                variant: {
+                    id: bigint;
+                    isActive: boolean;
+                    price: import("@prisma/client/runtime/library").Decimal;
+                    productId: bigint;
+                    variantName: string;
+                    unitLabel: string | null;
+                    compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
+                    stockQuantity: number;
+                } | null;
             } & {
                 id: bigint;
-                cartId: bigint;
                 productId: bigint;
                 variantId: bigint | null;
                 quantity: number;
+                cartId: bigint;
                 unitPriceSnapshot: import("@prisma/client/runtime/library").Decimal;
             })[];
         };
@@ -53,16 +53,6 @@ export declare class CartService {
         data: {
             id: number;
             items: ({
-                variant: {
-                    id: bigint;
-                    productId: bigint;
-                    variantName: string;
-                    unitLabel: string | null;
-                    price: import("@prisma/client/runtime/library").Decimal;
-                    compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
-                    stockQuantity: number;
-                    isActive: boolean;
-                } | null;
                 product: {
                     images: {
                         id: bigint;
@@ -71,23 +61,33 @@ export declare class CartService {
                         imageUrl: string;
                     }[];
                 } & {
+                    name: string;
                     id: bigint;
                     createdAt: Date;
                     updatedAt: Date;
-                    name: string;
-                    isActive: boolean;
                     categoryId: bigint | null;
                     slug: string;
                     sku: string | null;
                     description: string | null;
                     origin: string | null;
+                    isActive: boolean;
                 };
+                variant: {
+                    id: bigint;
+                    isActive: boolean;
+                    price: import("@prisma/client/runtime/library").Decimal;
+                    productId: bigint;
+                    variantName: string;
+                    unitLabel: string | null;
+                    compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
+                    stockQuantity: number;
+                } | null;
             } & {
                 id: bigint;
-                cartId: bigint;
                 productId: bigint;
                 variantId: bigint | null;
                 quantity: number;
+                cartId: bigint;
                 unitPriceSnapshot: import("@prisma/client/runtime/library").Decimal;
             })[];
         };
@@ -97,16 +97,6 @@ export declare class CartService {
         data: {
             id: number;
             items: ({
-                variant: {
-                    id: bigint;
-                    productId: bigint;
-                    variantName: string;
-                    unitLabel: string | null;
-                    price: import("@prisma/client/runtime/library").Decimal;
-                    compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
-                    stockQuantity: number;
-                    isActive: boolean;
-                } | null;
                 product: {
                     images: {
                         id: bigint;
@@ -115,23 +105,33 @@ export declare class CartService {
                         imageUrl: string;
                     }[];
                 } & {
+                    name: string;
                     id: bigint;
                     createdAt: Date;
                     updatedAt: Date;
-                    name: string;
-                    isActive: boolean;
                     categoryId: bigint | null;
                     slug: string;
                     sku: string | null;
                     description: string | null;
                     origin: string | null;
+                    isActive: boolean;
                 };
+                variant: {
+                    id: bigint;
+                    isActive: boolean;
+                    price: import("@prisma/client/runtime/library").Decimal;
+                    productId: bigint;
+                    variantName: string;
+                    unitLabel: string | null;
+                    compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
+                    stockQuantity: number;
+                } | null;
             } & {
                 id: bigint;
-                cartId: bigint;
                 productId: bigint;
                 variantId: bigint | null;
                 quantity: number;
+                cartId: bigint;
                 unitPriceSnapshot: import("@prisma/client/runtime/library").Decimal;
             })[];
         };
@@ -141,16 +141,6 @@ export declare class CartService {
         data: {
             id: number;
             items: ({
-                variant: {
-                    id: bigint;
-                    productId: bigint;
-                    variantName: string;
-                    unitLabel: string | null;
-                    price: import("@prisma/client/runtime/library").Decimal;
-                    compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
-                    stockQuantity: number;
-                    isActive: boolean;
-                } | null;
                 product: {
                     images: {
                         id: bigint;
@@ -159,23 +149,33 @@ export declare class CartService {
                         imageUrl: string;
                     }[];
                 } & {
+                    name: string;
                     id: bigint;
                     createdAt: Date;
                     updatedAt: Date;
-                    name: string;
-                    isActive: boolean;
                     categoryId: bigint | null;
                     slug: string;
                     sku: string | null;
                     description: string | null;
                     origin: string | null;
+                    isActive: boolean;
                 };
+                variant: {
+                    id: bigint;
+                    isActive: boolean;
+                    price: import("@prisma/client/runtime/library").Decimal;
+                    productId: bigint;
+                    variantName: string;
+                    unitLabel: string | null;
+                    compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
+                    stockQuantity: number;
+                } | null;
             } & {
                 id: bigint;
-                cartId: bigint;
                 productId: bigint;
                 variantId: bigint | null;
                 quantity: number;
+                cartId: bigint;
                 unitPriceSnapshot: import("@prisma/client/runtime/library").Decimal;
             })[];
         };
@@ -185,16 +185,6 @@ export declare class CartService {
         data: {
             id: number;
             items: ({
-                variant: {
-                    id: bigint;
-                    productId: bigint;
-                    variantName: string;
-                    unitLabel: string | null;
-                    price: import("@prisma/client/runtime/library").Decimal;
-                    compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
-                    stockQuantity: number;
-                    isActive: boolean;
-                } | null;
                 product: {
                     images: {
                         id: bigint;
@@ -203,23 +193,33 @@ export declare class CartService {
                         imageUrl: string;
                     }[];
                 } & {
+                    name: string;
                     id: bigint;
                     createdAt: Date;
                     updatedAt: Date;
-                    name: string;
-                    isActive: boolean;
                     categoryId: bigint | null;
                     slug: string;
                     sku: string | null;
                     description: string | null;
                     origin: string | null;
+                    isActive: boolean;
                 };
+                variant: {
+                    id: bigint;
+                    isActive: boolean;
+                    price: import("@prisma/client/runtime/library").Decimal;
+                    productId: bigint;
+                    variantName: string;
+                    unitLabel: string | null;
+                    compareAtPrice: import("@prisma/client/runtime/library").Decimal | null;
+                    stockQuantity: number;
+                } | null;
             } & {
                 id: bigint;
-                cartId: bigint;
                 productId: bigint;
                 variantId: bigint | null;
                 quantity: number;
+                cartId: bigint;
                 unitPriceSnapshot: import("@prisma/client/runtime/library").Decimal;
             })[];
         };

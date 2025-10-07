@@ -90,7 +90,7 @@ let AuthService = class AuthService {
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok)
             throw new common_1.UnauthorizedException({ error: 'Email hoặc mật khẩu không đúng' });
-        const payload = { userId: Number(user.id), email: user.email, role: user.role };
+        const payload = { id: Number(user.id), email: user.email, role: user.role };
         const token = await this.jwt.signAsync(payload);
         const safeUser = {
             id: Number(user.id),
@@ -172,6 +172,105 @@ let AuthService = class AuthService {
             throw new common_1.BadRequestException({ error: 'Token đã hết hạn' });
         }
         return { success: true, message: 'Token hợp lệ' };
+    }
+    async getProfile(userId) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: BigInt(userId) },
+            select: {
+                id: true,
+                email: true,
+                fullName: true,
+                phone: true,
+                avatarUrl: true,
+                role: true,
+                createdAt: true,
+            },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('Không tìm thấy user');
+        }
+        return {
+            success: true,
+            data: {
+                id: Number(user.id),
+                email: user.email,
+                fullName: user.fullName,
+                phone: user.phone,
+                avatarUrl: user.avatarUrl,
+                role: user.role,
+                createdAt: user.createdAt,
+            },
+        };
+    }
+    async updateProfile(userId, dto) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: BigInt(userId) },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('Không tìm thấy user');
+        }
+        const updatedUser = await this.prisma.user.update({
+            where: { id: BigInt(userId) },
+            data: {
+                ...(dto.fullName && { fullName: dto.fullName }),
+                ...(dto.phone && { phone: dto.phone }),
+                ...(dto.avatarUrl && { avatarUrl: dto.avatarUrl }),
+            },
+            select: {
+                id: true,
+                email: true,
+                fullName: true,
+                phone: true,
+                avatarUrl: true,
+                role: true,
+            },
+        });
+        return {
+            success: true,
+            data: {
+                id: Number(updatedUser.id),
+                email: updatedUser.email,
+                fullName: updatedUser.fullName,
+                phone: updatedUser.phone,
+                avatarUrl: updatedUser.avatarUrl,
+                role: updatedUser.role,
+            },
+        };
+    }
+    async uploadAvatar(userId, file) {
+        if (!file) {
+            throw new common_1.BadRequestException('Không có file được upload');
+        }
+        try {
+            const avatarUrl = `/uploads/avatars/${file.filename}`;
+            const user = await this.prisma.user.update({
+                where: { id: BigInt(userId) },
+                data: { avatarUrl },
+                select: {
+                    id: true,
+                    email: true,
+                    fullName: true,
+                    phone: true,
+                    avatarUrl: true,
+                    role: true,
+                },
+            });
+            return {
+                success: true,
+                data: {
+                    id: Number(user.id),
+                    email: user.email,
+                    fullName: user.fullName,
+                    phone: user.phone,
+                    avatarUrl: user.avatarUrl,
+                    role: user.role,
+                },
+            };
+        }
+        catch (error) {
+            console.error('Error uploading avatar:', error);
+            throw new common_1.BadRequestException('Lỗi khi upload avatar');
+        }
     }
 };
 exports.AuthService = AuthService;

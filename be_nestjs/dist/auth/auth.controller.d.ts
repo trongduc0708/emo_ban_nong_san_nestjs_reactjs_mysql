@@ -50,4 +50,42 @@ export declare class AuthController {
         success: boolean;
         message: string;
     }>;
+    getProfile(req: any): Promise<{
+        success: boolean;
+        data: {
+            id: number;
+            email: string;
+            fullName: string;
+            phone: string | null;
+            avatarUrl: string | null;
+            role: import(".prisma/client").$Enums.UserRole;
+            createdAt: Date;
+        };
+    }>;
+    updateProfile(req: any, dto: {
+        fullName?: string;
+        phone?: string;
+        avatarUrl?: string;
+    }): Promise<{
+        success: boolean;
+        data: {
+            id: number;
+            email: string;
+            fullName: string;
+            phone: string | null;
+            avatarUrl: string | null;
+            role: import(".prisma/client").$Enums.UserRole;
+        };
+    }>;
+    uploadAvatar(req: any, file: Express.Multer.File): Promise<{
+        success: boolean;
+        data: {
+            id: number;
+            email: string;
+            fullName: string;
+            phone: string | null;
+            avatarUrl: string | null;
+            role: import(".prisma/client").$Enums.UserRole;
+        };
+    }>;
 }

@@ -1,5 +1,8 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, Post, UseInterceptors, UploadedFile, UseGuards, Req, Body } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { multerConfig } from '../config/multer.config';
 
 @Controller('products')
 export class ProductsController {
@@ -36,5 +39,42 @@ export class ProductsController {
   ) {
     const limitNum = limit ? Number(limit) : 5;
     return this.productsService.getProductsByCategory(categorySlug, limitNum);
+  }
+
+  // Upload ảnh sản phẩm
+  @UseGuards(JwtAuthGuard)
+  @Post('upload-image')
+  @UseInterceptors(FileInterceptor('image', {
+    storage: multerConfig.productStorage,
+    fileFilter: multerConfig.fileFilter,
+    limits: multerConfig.limits,
+  }))
+  async uploadProductImage(
+    @Req() req: any,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('productId') productId: string,
+    @Body('position') position: string = '0'
+  ) {
+    if (!file) {
+      throw new Error('Không có file được upload');
+    }
+
+    const imageUrl = `/uploads/products/${file.filename}`;
+    
+    // Lưu vào database
+    const result = await this.productsService.addProductImage(
+      Number(productId),
+      imageUrl,
+      Number(position)
+    );
+
+    return {
+      success: true,
+      data: {
+        imageUrl,
+        id: result.id,
+        position: result.position
+      }
+    };
   }
 }

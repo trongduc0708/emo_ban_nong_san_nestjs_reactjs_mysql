@@ -14,7 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductsController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const products_service_1 = require("./products.service");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const multer_config_1 = require("../config/multer.config");
 let ProductsController = class ProductsController {
     productsService;
     constructor(productsService) {
@@ -33,6 +36,21 @@ let ProductsController = class ProductsController {
     async getProductsByCategory(categorySlug, limit) {
         const limitNum = limit ? Number(limit) : 5;
         return this.productsService.getProductsByCategory(categorySlug, limitNum);
+    }
+    async uploadProductImage(req, file, productId, position = '0') {
+        if (!file) {
+            throw new Error('Không có file được upload');
+        }
+        const imageUrl = `/uploads/products/${file.filename}`;
+        const result = await this.productsService.addProductImage(Number(productId), imageUrl, Number(position));
+        return {
+            success: true,
+            data: {
+                imageUrl,
+                id: result.id,
+                position: result.position
+            }
+        };
     }
 };
 exports.ProductsController = ProductsController;
@@ -71,6 +89,22 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "getProductsByCategory", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('upload-image'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('image', {
+        storage: multer_config_1.multerConfig.productStorage,
+        fileFilter: multer_config_1.multerConfig.fileFilter,
+        limits: multer_config_1.multerConfig.limits,
+    })),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.UploadedFile)()),
+    __param(2, (0, common_1.Body)('productId')),
+    __param(3, (0, common_1.Body)('position')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, String, String]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "uploadProductImage", null);
 exports.ProductsController = ProductsController = __decorate([
     (0, common_1.Controller)('products'),
     __metadata("design:paramtypes", [products_service_1.ProductsService])

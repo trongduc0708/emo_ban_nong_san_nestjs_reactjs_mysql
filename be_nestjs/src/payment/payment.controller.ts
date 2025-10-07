@@ -11,7 +11,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard)
   @Post('process')
   async processPayment(@Req() req: any, @Body() dto: ProcessPaymentDto) {
-    const userId = Number(req.user?.userId);
+    const userId = Number(req.user?.id);
     return this.paymentService.processPayment(userId, dto);
   }
 
@@ -19,7 +19,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard)
   @Get('orders')
   async getOrderHistory(@Req() req: any) {
-    const userId = Number(req.user?.userId);
+    const userId = Number(req.user?.id);
     return this.paymentService.getOrderHistory(userId);
   }
 }

@@ -175,7 +175,7 @@ export default function Orders() {
                       <div key={item.id} className="flex items-center space-x-3">
                         {item.product.images.length > 0 && (
                           <img
-                            src={item.product.images[0].imageUrl}
+                            src={item.product.images[0]?.imageUrl || '/uploads/products/placeholder.jpg'}
                             alt={item.productName}
                             className="w-12 h-12 object-cover rounded-lg"
                           />

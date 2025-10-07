@@ -74,7 +74,7 @@ export default function ProductDetail() {
         <div className="space-y-4">
           <div className="aspect-w-16 aspect-h-12">
             <img
-              src={images[0] || 'https://picsum.photos/seed/emo/800/600'}
+              src={images[0] || '/uploads/products/placeholder.jpg'}
               alt={product.name}
               className="w-full h-96 object-cover rounded-lg"
             />

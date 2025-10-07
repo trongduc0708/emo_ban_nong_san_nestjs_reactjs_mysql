@@ -46,7 +46,7 @@ export default function Cart() {
             <Card key={item.id} className="p-4">
               <div className="flex gap-4">
                 <img
-                  src={item.product.images[0]?.imageUrl || '/placeholder.jpg'}
+                  src={item.product.images[0]?.imageUrl || '/uploads/products/placeholder.jpg'}
                   alt={item.product.name}
                   className="w-20 h-20 object-cover rounded-lg"
                 />

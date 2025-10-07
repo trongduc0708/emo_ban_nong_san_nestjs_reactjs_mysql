@@ -14,9 +14,11 @@ export class JwtAuthGuard implements CanActivate {
     const token = auth.slice(7);
     try {
       const payload = this.jwt.verify(token, { secret: process.env.JWT_SECRET || 'dev-secret' });
+      console.log('JwtAuthGuard - payload:', payload);
       req.user = payload;
       return true;
-    } catch {
+    } catch (error) {
+      console.log('JwtAuthGuard - error:', error);
       throw new UnauthorizedException({ error: 'Token không hợp lệ' });
     }
   }

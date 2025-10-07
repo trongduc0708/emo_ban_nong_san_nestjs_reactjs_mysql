@@ -143,7 +143,7 @@ export default function OrderSuccess() {
             <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
               {item.product.images.length > 0 && (
                 <img
-                  src={item.product.images[0].imageUrl}
+                  src={item.product.images[0]?.imageUrl || '/uploads/products/placeholder.jpg'}
                   alt={item.productName}
                   className="w-16 h-16 object-cover rounded-lg"
                 />

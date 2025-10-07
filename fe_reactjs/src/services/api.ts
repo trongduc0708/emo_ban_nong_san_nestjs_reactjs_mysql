@@ -90,6 +90,14 @@ export const authApi = {
     phone?: string
     avatarUrl?: string
   }) => api.put('/auth/profile', data),
+  
+  // Upload avatar
+  uploadAvatar: (formData: FormData) => 
+    api.post('/auth/upload-avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
 }
 
 // API cho Products
