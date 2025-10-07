@@ -3,15 +3,20 @@ import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Search, Filter, Grid, List } from 'lucide-react'
+import { Search, Filter, Grid, List, ShoppingCart, Loader2 } from 'lucide-react'
 import { useQuery } from 'react-query'
 import { productApi } from '@/services/api'
+import { useCart } from '@/contexts/CartContext'
+import toast from 'react-hot-toast'
 
 export default function Products() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [addingToCart, setAddingToCart] = useState<number | null>(null)
+  
+  const { addToCart } = useCart()
 
   // Load categories from API
   const { data: categoriesResp } = useQuery(['categories'], () => productApi.getCategories().then(r => r.data))
@@ -54,6 +59,30 @@ export default function Products() {
   const handleNextPage = () => {
     if (currentPage < pagination.totalPages) {
       handlePageChange(currentPage + 1)
+    }
+  }
+
+  // Handle add to cart
+  const handleAddToCart = async (product: any) => {
+    try {
+      setAddingToCart(product.id)
+      
+      // Get the first variant or null if no variants
+      const variantId = product.variants?.[0]?.id || null
+      
+      await addToCart(product.id, variantId, 1)
+      
+      toast.success(`Đã thêm "${product.name}" vào giỏ hàng!`, {
+        duration: 3000,
+        icon: '🛒',
+      })
+    } catch (error: any) {
+      console.error('Lỗi thêm vào giỏ hàng:', error)
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi thêm vào giỏ hàng', {
+        duration: 4000,
+      })
+    } finally {
+      setAddingToCart(null)
     }
   }
 
@@ -165,8 +194,23 @@ export default function Products() {
                     <span className="text-xl font-bold text-green-600">
                       {(product.variants?.[0]?.price ?? 0).toLocaleString('vi-VN')}₫
                     </span>
-                    <Button size="sm">
-                      Thêm vào giỏ
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleAddToCart(product)}
+                      disabled={addingToCart === product.id}
+                      className="flex items-center space-x-2"
+                    >
+                      {addingToCart === product.id ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Đang thêm...</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-4 h-4" />
+                          <span>Thêm vào giỏ</span>
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -202,8 +246,23 @@ export default function Products() {
                     <span className="text-xl font-bold text-green-600">
                       {(product.variants?.[0]?.price ?? 0).toLocaleString('vi-VN')}₫
                     </span>
-                    <Button size="sm">
-                      Thêm vào giỏ
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleAddToCart(product)}
+                      disabled={addingToCart === product.id}
+                      className="flex items-center space-x-2"
+                    >
+                      {addingToCart === product.id ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Đang thêm...</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-4 h-4" />
+                          <span>Thêm vào giỏ</span>
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>

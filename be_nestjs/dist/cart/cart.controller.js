@@ -14,46 +14,83 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CartController = void 0;
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../prisma/prisma.service");
+const cart_service_1 = require("./cart.service");
+const add_to_cart_dto_1 = require("./dto/add-to-cart.dto");
+const update_cart_item_dto_1 = require("./dto/update-cart-item.dto");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 let CartController = class CartController {
-    prisma;
-    constructor(prisma) {
-        this.prisma = prisma;
+    cartService;
+    constructor(cartService) {
+        this.cartService = cartService;
     }
     async getCart(req) {
-        const userIdHeader = req.headers['x-user-id'];
-        const userId = userIdHeader ? Number(userIdHeader) : null;
-        if (!userId || Number.isNaN(userId)) {
-            return { success: true, data: { items: [] } };
-        }
-        const cart = await this.prisma.cart.findFirst({
-            where: { userId: BigInt(userId) },
-            include: {
-                items: {
-                    include: {
-                        product: {
-                            include: {
-                                images: { orderBy: { position: 'asc' }, take: 1 },
-                            },
-                        },
-                        variant: true,
-                    },
-                },
-            },
-        });
-        return { success: true, data: { items: cart?.items ?? [] } };
+        const userId = Number(req.user?.userId);
+        return this.cartService.getCart(userId);
+    }
+    async addToCart(req, dto) {
+        const userId = Number(req.user?.userId);
+        return this.cartService.addToCart(userId, dto);
+    }
+    async updateCartItem(req, id, dto) {
+        const userId = Number(req.user?.userId);
+        return this.cartService.updateCartItem(userId, Number(id), dto);
+    }
+    async removeFromCart(req, id) {
+        const userId = Number(req.user?.userId);
+        return this.cartService.removeFromCart(userId, Number(id));
+    }
+    async clearCart(req) {
+        const userId = Number(req.user?.userId);
+        return this.cartService.clearCart(userId);
     }
 };
 exports.CartController = CartController;
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], CartController.prototype, "getCart", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('items'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, add_to_cart_dto_1.AddToCartDto]),
+    __metadata("design:returntype", Promise)
+], CartController.prototype, "addToCart", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)('items/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, update_cart_item_dto_1.UpdateCartItemDto]),
+    __metadata("design:returntype", Promise)
+], CartController.prototype, "updateCartItem", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Delete)('items/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], CartController.prototype, "removeFromCart", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Delete)(),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], CartController.prototype, "clearCart", null);
 exports.CartController = CartController = __decorate([
     (0, common_1.Controller)('cart'),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [cart_service_1.CartService])
 ], CartController);
 //# sourceMappingURL=cart.controller.js.map

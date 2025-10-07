@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { SerializeBigIntInterceptor } from './common/interceptors/serialize-bigint.interceptor';
 
@@ -15,6 +16,13 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
+
+  // Enable validation
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
 
   // Convert all BigInt in responses to number
   app.useGlobalInterceptors(new SerializeBigIntInterceptor());

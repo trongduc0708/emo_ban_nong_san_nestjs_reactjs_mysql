@@ -22,7 +22,7 @@ exports.AuthModule = AuthModule = __decorate([
             prisma_module_1.PrismaModule,
             email_module_1.EmailModule,
             jwt_1.JwtModule.register({
-                global: false,
+                global: true,
                 secret: process.env.JWT_SECRET || 'dev-secret',
                 signOptions: { expiresIn: '7d' },
             }),

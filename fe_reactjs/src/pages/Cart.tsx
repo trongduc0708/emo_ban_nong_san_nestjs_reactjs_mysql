@@ -4,6 +4,7 @@ import { useCart } from '@/contexts/CartContext'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react'
+import { formatPrice } from '@/utils/priceUtils'
 
 export default function Cart() {
   const { items, totalItems, totalPrice, removeFromCart, updateQuantity } = useCart()
@@ -60,7 +61,7 @@ export default function Cart() {
                   )}
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-bold text-green-600">
-                      {item.unitPriceSnapshot.toLocaleString('vi-VN')}₫
+                      {formatPrice(item.unitPriceSnapshot)}₫
                     </span>
                     <div className="flex items-center space-x-2">
                       <button
@@ -101,7 +102,7 @@ export default function Cart() {
               <div className="flex justify-between">
                 <span className="text-gray-600">Tạm tính:</span>
                 <span className="font-medium">
-                  {totalPrice.toLocaleString('vi-VN')}₫
+                  {Number(totalPrice || 0).toLocaleString('vi-VN')}₫
                 </span>
               </div>
               <div className="flex justify-between">
@@ -112,7 +113,7 @@ export default function Cart() {
                 <div className="flex justify-between text-lg font-bold">
                   <span>Tổng cộng:</span>
                   <span className="text-green-600">
-                    {(totalPrice + 20000).toLocaleString('vi-VN')}₫
+                    {(Number(totalPrice || 0) + 20000).toLocaleString('vi-VN')}₫
                   </span>
                 </div>
               </div>

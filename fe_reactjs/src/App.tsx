@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
 import Layout from '@/components/Layout'
+import AppWrapper from '@/components/AppWrapper'
 import Home from '@/pages/Home'
 import Products from '@/pages/Products'
 import ProductDetail from '@/pages/ProductDetail'
@@ -22,8 +23,9 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <Layout>
-          <Routes>
+        <AppWrapper>
+          <Layout>
+            <Routes>
             {/* Trang công khai */}
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
@@ -61,8 +63,9 @@ function App() {
                 <AdminDashboard />
               </ProtectedRoute>
             } />
-          </Routes>
-        </Layout>
+            </Routes>
+          </Layout>
+        </AppWrapper>
       </CartProvider>
     </AuthProvider>
   )

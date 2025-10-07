@@ -24,11 +24,20 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Chỉ xử lý 401 error khi có response (không phải network error)
     if (error.response?.status === 401) {
+      console.log('Token hết hạn hoặc không hợp lệ, đăng xuất user')
       // Token hết hạn, đăng xuất user
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      
+      // Chỉ redirect nếu không phải trang login
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+    } else if (error.code === 'NETWORK_ERROR' || error.message?.includes('Network Error')) {
+      // Không xử lý network error, để component tự xử lý
+      console.log('Network error, không đăng xuất user:', error.message)
     }
     return Promise.reject(error)
   }

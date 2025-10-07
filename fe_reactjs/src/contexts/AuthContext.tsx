@@ -40,14 +40,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Khởi tạo auth state từ localStorage
   useEffect(() => {
-    const savedToken = localStorage.getItem('token')
-    const savedUser = localStorage.getItem('user')
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken)
-      setUser(JSON.parse(savedUser))
+    const initializeAuth = async () => {
+      try {
+        const savedToken = localStorage.getItem('token')
+        const savedUser = localStorage.getItem('user')
+        
+        if (savedToken && savedUser) {
+          // Parse user data từ localStorage trước
+          try {
+            const userData = JSON.parse(savedUser)
+            setToken(savedToken)
+            setUser(userData)
+            
+            // Validate token bằng cách gọi API profile (không block UI)
+            // Chỉ validate nếu không phải trang login
+            if (window.location.pathname !== '/login') {
+              // Thêm timeout để tránh chờ quá lâu
+              const timeoutId = setTimeout(() => {
+                console.log('Timeout khi validate token, giữ nguyên token')
+              }, 5000) // 5 giây timeout
+
+              authApi.getProfile()
+                .then(() => {
+                  clearTimeout(timeoutId)
+                  console.log('Token hợp lệ, user vẫn đăng nhập')
+                })
+                .catch((error) => {
+                  clearTimeout(timeoutId)
+                  // Chỉ xóa token nếu là lỗi 401 (Unauthorized) - token thực sự không hợp lệ
+                  // Không xóa token nếu là lỗi network hoặc server không start
+                  if (error.response?.status === 401) {
+                    console.log('Token không hợp lệ, đăng xuất user')
+                    localStorage.removeItem('token')
+                    localStorage.removeItem('user')
+                    setToken(null)
+                    setUser(null)
+                  } else {
+                    console.log('Lỗi network hoặc server, giữ nguyên token:', error.message)
+                  }
+                })
+            }
+          } catch (parseError) {
+            // JSON parse error, xóa localStorage
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            setToken(null)
+            setUser(null)
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error)
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        setToken(null)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
     }
-    setLoading(false)
+
+    initializeAuth()
   }, [])
 
   // Hàm đăng nhập

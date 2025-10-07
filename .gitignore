@@ -1,8 +1,10 @@
 # Nestjs specific
-/dist
-/node_modules
-/build
-/tmp
+
+
+/be_nestjs/build
+/be_nestjs/tmp
+/fe_reactjs/build
+/fe_reactjs/tmp
 /be_nestjs/dist
 /be_nestjs/node_modules
 /fe_reactjs/node_modules

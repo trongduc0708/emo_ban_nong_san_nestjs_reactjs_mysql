@@ -10,7 +10,7 @@ import { EmailModule } from '../common/services/email.module';
     PrismaModule,
     EmailModule,
     JwtModule.register({
-      global: false,
+      global: true,
       secret: process.env.JWT_SECRET || 'dev-secret',
       signOptions: { expiresIn: '7d' },
     }),

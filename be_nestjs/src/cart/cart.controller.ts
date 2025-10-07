@@ -1,36 +1,50 @@
-import { Controller, Get, Req } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { Controller, Get, Post, Put, Delete, Req, Body, Param, UseGuards } from '@nestjs/common';
+import { CartService } from './cart.service';
+import { AddToCartDto } from './dto/add-to-cart.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @Controller('cart')
 export class CartController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly cartService: CartService) {}
 
-  // Lấy giỏ hàng theo userId từ header Authorization (tạm thời: x-user-id)
+  // Lấy giỏ hàng của user hiện tại
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getCart(@Req() req: any) {
-    const userIdHeader = req.headers['x-user-id'];
-    const userId = userIdHeader ? Number(userIdHeader) : null;
+    const userId = Number(req.user?.userId);
+    return this.cartService.getCart(userId);
+  }
 
-    if (!userId || Number.isNaN(userId)) {
-      return { success: true, data: { items: [] } };
-    }
+  // Thêm sản phẩm vào giỏ hàng
+  @UseGuards(JwtAuthGuard)
+  @Post('items')
+  async addToCart(@Req() req: any, @Body() dto: AddToCartDto) {
+    const userId = Number(req.user?.userId);
+    return this.cartService.addToCart(userId, dto);
+  }
 
-    const cart = await this.prisma.cart.findFirst({
-      where: { userId: BigInt(userId) },
-      include: {
-        items: {
-          include: {
-            product: {
-              include: {
-                images: { orderBy: { position: 'asc' }, take: 1 },
-              },
-            },
-            variant: true,
-          },
-        },
-      },
-    });
+  // Cập nhật số lượng sản phẩm trong giỏ hàng
+  @UseGuards(JwtAuthGuard)
+  @Put('items/:id')
+  async updateCartItem(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateCartItemDto) {
+    const userId = Number(req.user?.userId);
+    return this.cartService.updateCartItem(userId, Number(id), dto);
+  }
 
-    return { success: true, data: { items: cart?.items ?? [] } };
+  // Xóa sản phẩm khỏi giỏ hàng
+  @UseGuards(JwtAuthGuard)
+  @Delete('items/:id')
+  async removeFromCart(@Req() req: any, @Param('id') id: string) {
+    const userId = Number(req.user?.userId);
+    return this.cartService.removeFromCart(userId, Number(id));
+  }
+
+  // Xóa toàn bộ giỏ hàng
+  @UseGuards(JwtAuthGuard)
+  @Delete()
+  async clearCart(@Req() req: any) {
+    const userId = Number(req.user?.userId);
+    return this.cartService.clearCart(userId);
   }
 }

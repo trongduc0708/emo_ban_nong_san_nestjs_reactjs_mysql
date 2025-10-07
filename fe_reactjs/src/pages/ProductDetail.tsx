@@ -3,15 +3,20 @@ import { useParams } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Star, Heart, Share2, Truck, Shield, RotateCcw } from 'lucide-react'
+import { Star, Heart, Share2, Truck, Shield, RotateCcw, ShoppingCart, Loader2 } from 'lucide-react'
 import { useQuery } from 'react-query'
 import { productApi } from '@/services/api'
+import { useCart } from '@/contexts/CartContext'
+import toast from 'react-hot-toast'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const [selectedVariant, setSelectedVariant] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState('description')
+  const [addingToCart, setAddingToCart] = useState(false)
+  
+  const { addToCart } = useCart()
 
   const productId = useMemo(() => Number(id), [id])
   const { data, isLoading } = useQuery([
@@ -29,6 +34,31 @@ export default function ProductDetail() {
     comment: r.comment,
     date: new Date(r.createdAt || Date.now()).toLocaleDateString('vi-VN')
   }))
+
+  // Handle add to cart
+  const handleAddToCart = async () => {
+    if (!product) return
+    
+    try {
+      setAddingToCart(true)
+      
+      const variantId = variants[selectedVariant]?.id || null
+      
+      await addToCart(product.id, variantId, quantity)
+      
+      toast.success(`Đã thêm ${quantity} "${product.name}" vào giỏ hàng!`, {
+        duration: 3000,
+        icon: '🛒',
+      })
+    } catch (error: any) {
+      console.error('Lỗi thêm vào giỏ hàng:', error)
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi thêm vào giỏ hàng', {
+        duration: 4000,
+      })
+    } finally {
+      setAddingToCart(false)
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -137,8 +167,23 @@ export default function ProductDetail() {
 
           {/* Actions */}
           <div className="flex space-x-4">
-            <Button size="lg" className="flex-1">
-              Thêm vào giỏ hàng
+            <Button 
+              size="lg" 
+              className="flex-1 flex items-center justify-center space-x-2"
+              onClick={handleAddToCart}
+              disabled={addingToCart}
+            >
+              {addingToCart ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Đang thêm...</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>Thêm vào giỏ hàng</span>
+                </>
+              )}
             </Button>
             <Button variant="outline" size="lg">
               <Heart className="w-5 h-5" />
