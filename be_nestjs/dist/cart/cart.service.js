@@ -19,7 +19,7 @@ let CartService = class CartService {
     }
     async getCart(userId) {
         console.log('Getting cart for userId:', userId);
-        const cart = await this.prisma.cart.findFirst({
+        let cart = await this.prisma.cart.findFirst({
             where: { userId: BigInt(userId) },
             include: {
                 items: {
@@ -34,9 +34,26 @@ let CartService = class CartService {
                 },
             },
         });
+        if (!cart) {
+            cart = await this.prisma.cart.create({
+                data: { userId: BigInt(userId) },
+                include: {
+                    items: {
+                        include: {
+                            product: {
+                                include: {
+                                    images: { orderBy: { position: 'asc' }, take: 1 },
+                                },
+                            },
+                            variant: true,
+                        },
+                    },
+                },
+            });
+        }
         console.log('Cart found:', cart);
         console.log('Cart items:', cart?.items);
-        return { success: true, data: { items: cart?.items ?? [] } };
+        return { success: true, data: { id: Number(cart.id), items: cart?.items ?? [] } };
     }
     async addToCart(userId, dto) {
         const { productId, variantId, quantity } = dto;

@@ -162,6 +162,19 @@ export const orderApi = {
 
 // API cho Payment
 export const paymentApi = {
+  // Xử lý thanh toán
+  processPayment: (data: {
+    cartId: number
+    paymentMethod?: 'COD' | 'VNPAY'
+    notes?: string
+  }) => api.post('/payment/process', data),
+  
+  // Lấy lịch sử đơn hàng
+  getOrderHistory: () => api.get('/payment/orders'),
+  
+  // Lấy giỏ hàng
+  getCart: () => api.get('/cart'),
+  
   // Tạo thanh toán VNPAY
   createVnpayPayment: (data: {
     orderId: number

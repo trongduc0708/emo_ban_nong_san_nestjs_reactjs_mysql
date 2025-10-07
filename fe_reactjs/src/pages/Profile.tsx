@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { User, Mail, Phone, MapPin, Edit3, Save, X, Plus, Trash2 } from 'lucide-react'
+import { User, Mail, Phone, MapPin, Edit3, Save, X, Plus, Trash2, Package, Heart, Key } from 'lucide-react'
 import { addressesApi } from '@/services/api'
 
 export default function Profile() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [addressOpenTick, setAddressOpenTick] = useState(0)
@@ -148,13 +150,28 @@ export default function Profile() {
               Thao tác nhanh
             </h3>
             <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => navigate('/change-password')}
+              >
+                <Key className="w-4 h-4 mr-2" />
                 Đổi mật khẩu
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => navigate('/orders')}
+              >
+                <Package className="w-4 h-4 mr-2" />
                 Lịch sử đơn hàng
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => navigate('/wishlist')}
+              >
+                <Heart className="w-4 h-4 mr-2" />
                 Danh sách yêu thích
               </Button>
             </div>
