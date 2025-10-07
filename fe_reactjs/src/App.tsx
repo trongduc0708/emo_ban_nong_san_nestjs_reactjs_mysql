@@ -16,6 +16,7 @@ import Orders from '@/pages/Orders'
 import AdminDashboard from '@/pages/admin/Dashboard'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import About from '@/pages/About'
+import Policy from '@/pages/Policy'
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/about" element={<About />} />
+            <Route path="/policy" element={<Policy />} />
             <Route path="/cart" element={<Cart />} />
             
             {/* Xác thực */}

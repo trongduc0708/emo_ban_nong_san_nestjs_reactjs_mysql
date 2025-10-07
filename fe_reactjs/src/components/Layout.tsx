@@ -54,6 +54,26 @@ export default function Layout({ children }: LayoutProps) {
                 Sản phẩm
               </Link>
               <Link
+                to="/about"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/about') 
+                    ? 'text-green-600 bg-green-50' 
+                    : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+                }`}
+              >
+                Giới thiệu
+              </Link>
+              <Link
+                to="/policy"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/policy') 
+                    ? 'text-green-600 bg-green-50' 
+                    : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+                }`}
+              >
+                Chính sách
+              </Link>
+              <Link
                 to="/cart"
                 className={`relative px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive('/cart') 
@@ -157,6 +177,28 @@ export default function Layout({ children }: LayoutProps) {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sản phẩm
+                </Link>
+                <Link
+                  to="/about"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/about') 
+                      ? 'text-green-600 bg-green-50' 
+                      : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Giới thiệu
+                </Link>
+                <Link
+                  to="/policy"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/policy') 
+                      ? 'text-green-600 bg-green-50' 
+                      : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Chính sách
                 </Link>
                 <Link
                   to="/cart"
