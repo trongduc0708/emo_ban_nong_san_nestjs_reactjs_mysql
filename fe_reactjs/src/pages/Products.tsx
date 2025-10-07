@@ -11,6 +11,7 @@ export default function Products() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Load categories from API
   const { data: categoriesResp } = useQuery(['categories'], () => productApi.getCategories().then(r => r.data))
@@ -21,9 +22,9 @@ export default function Products() {
 
   // Load products from API
   const { data: productsResp, isLoading } = useQuery([
-    'products', selectedCategory, searchTerm
+    'products', selectedCategory, searchTerm, currentPage
   ], () => productApi.getProducts({
-    page: 1,
+    page: currentPage,
     limit: 12,
     category: selectedCategory || undefined,
     search: searchTerm || undefined,
@@ -31,6 +32,30 @@ export default function Products() {
     keepPreviousData: true,
   })
   const products = productsResp?.data?.products || []
+  const pagination = productsResp?.data?.pagination || { totalPages: 1, currentPage: 1, totalItems: 0 }
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedCategory, searchTerm])
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      handlePageChange(currentPage - 1)
+    }
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < pagination.totalPages) {
+      handlePageChange(currentPage + 1)
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -189,25 +214,74 @@ export default function Products() {
       </div>
 
       {/* Pagination */}
-      <div className="mt-12 flex justify-center">
-        <nav className="flex items-center space-x-2">
-          <button className="px-3 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
-            Trước
-          </button>
-          <button className="px-3 py-2 rounded-lg bg-primary-500 text-white">
-            1
-          </button>
-          <button className="px-3 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
-            2
-          </button>
-          <button className="px-3 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
-            3
-          </button>
-          <button className="px-3 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
-            Sau
-          </button>
-        </nav>
-      </div>
+      {pagination.totalPages > 1 && (
+        <div className="mt-12 flex justify-center">
+          <nav className="flex items-center space-x-2">
+            <button 
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className={`px-3 py-2 rounded-lg transition-colors ${
+                currentPage === 1 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              Trước
+            </button>
+            
+            {/* Page numbers */}
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => {
+              // Show first page, last page, current page, and pages around current page
+              const shouldShow = 
+                page === 1 || 
+                page === pagination.totalPages || 
+                Math.abs(page - currentPage) <= 1
+              
+              if (!shouldShow) {
+                // Show ellipsis for gaps
+                if (page === 2 && currentPage > 4) {
+                  return <span key={`ellipsis-${page}`} className="px-2 text-gray-500">...</span>
+                }
+                if (page === pagination.totalPages - 1 && currentPage < pagination.totalPages - 3) {
+                  return <span key={`ellipsis-${page}`} className="px-2 text-gray-500">...</span>
+                }
+                return null
+              }
+              
+              return (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-2 rounded-lg transition-colors ${
+                    page === currentPage
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                  }`}
+                >
+                  {page}
+                </button>
+              )
+            })}
+            
+            <button 
+              onClick={handleNextPage}
+              disabled={currentPage === pagination.totalPages}
+              className={`px-3 py-2 rounded-lg transition-colors ${
+                currentPage === pagination.totalPages 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              Sau
+            </button>
+          </nav>
+          
+          {/* Pagination info */}
+          <div className="mt-4 text-center text-sm text-gray-500">
+            Trang {currentPage} / {pagination.totalPages} - Tổng {pagination.totalItems} sản phẩm
+          </div>
+        </div>
+      )}
     </div>
   )
 }
