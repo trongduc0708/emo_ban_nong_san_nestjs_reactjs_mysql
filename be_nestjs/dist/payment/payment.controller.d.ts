@@ -1,5 +1,6 @@
 import { PaymentService } from './payment.service';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
+import { Response } from 'express';
 export declare class PaymentController {
     private readonly paymentService;
     constructor(paymentService: PaymentService);
@@ -75,5 +76,19 @@ export declare class PaymentController {
                 shippingAddressSnapshot: import("@prisma/client/runtime/library").JsonValue | null;
             })[];
         };
+    }>;
+    createVnpayPayment(req: any, dto: ProcessPaymentDto): Promise<{
+        success: boolean;
+        data: {
+            paymentUrl: string;
+            orderId: number;
+            orderCode: string;
+            totalAmount: number;
+        };
+    }>;
+    vnpayReturn(query: any, res: Response): Promise<void>;
+    vnpayIpn(body: any): Promise<{
+        RspCode: string;
+        Message: string;
     }>;
 }

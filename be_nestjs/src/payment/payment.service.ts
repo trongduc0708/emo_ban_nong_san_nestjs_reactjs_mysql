@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
+import { VnpayService } from './vnpay.service';
 
 @Injectable()
 export class PaymentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly vnpayService: VnpayService
+  ) {}
 
   async processPayment(userId: number, dto: ProcessPaymentDto) {
     const { cartId, paymentMethod = 'COD', notes } = dto;
@@ -135,5 +139,200 @@ export class PaymentService {
     });
 
     return { success: true, data: { orders } };
+  }
+
+  async createVnpayPayment(userId: number, dto: ProcessPaymentDto, ipAddr: string) {
+    console.log('🔍 createVnpayPayment called with:', { userId, dto, ipAddr });
+    
+    const { cartId, notes } = dto;
+
+    // Lấy giỏ hàng và kiểm tra quyền sở hữu
+    const cart = await this.prisma.cart.findFirst({
+      where: { 
+        id: cartId, 
+        userId: BigInt(userId) 
+      },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: { variants: true }
+            },
+            variant: true
+          }
+        }
+      }
+    });
+
+    if (!cart) {
+      throw new NotFoundException('Giỏ hàng không tồn tại');
+    }
+
+    if (cart.items.length === 0) {
+      throw new BadRequestException('Giỏ hàng trống');
+    }
+
+    // Kiểm tra số lượng tồn kho
+    for (const item of cart.items) {
+      const variant = item.variant;
+      if (variant && variant.stockQuantity < item.quantity) {
+        throw new BadRequestException(
+          `Biến thể "${variant.variantName}" chỉ còn ${variant.stockQuantity} sản phẩm trong kho`
+        );
+      }
+    }
+
+    // Tạo đơn hàng với status PENDING
+    const totalAmount = cart.items.reduce((sum, item) => 
+      sum + Number(item.unitPriceSnapshot) * item.quantity, 0
+    );
+
+    const order = await this.prisma.order.create({
+      data: {
+        orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        userId: BigInt(userId),
+        status: 'PENDING',
+        paymentMethod: 'VNPAY',
+        notes,
+        totalAmount: totalAmount
+      }
+    });
+
+    // Tạo order items
+    for (const item of cart.items) {
+      const product = item.product;
+      const variant = item.variant;
+      const unitPrice = Number(item.unitPriceSnapshot);
+      const totalPrice = unitPrice * item.quantity;
+      
+      await this.prisma.orderItem.create({
+        data: {
+          orderId: order.id,
+          productId: item.productId,
+          variantId: item.variantId,
+          productName: product.name,
+          variantName: variant?.variantName || null,
+          sku: product.sku,
+          quantity: item.quantity,
+          unitPrice: unitPrice,
+          totalPrice: totalPrice
+        }
+      });
+    }
+
+    // Tạo VNPay payment URL
+    const orderInfo = `Thanh toan don hang ${order.orderCode}`;
+    console.log('🔍 Calling vnpayService.createPaymentUrl with:', {
+      orderCode: order.orderCode,
+      totalAmount,
+      orderInfo,
+      ipAddr
+    });
+    
+    const paymentUrl = this.vnpayService.createPaymentUrl(
+      order.orderCode,
+      totalAmount,
+      orderInfo,
+      ipAddr
+    );
+
+    console.log('🔍 Payment URL created:', paymentUrl);
+
+    return {
+      success: true,
+      data: {
+        paymentUrl,
+        orderId: Number(order.id),
+        orderCode: order.orderCode,
+        totalAmount
+      }
+    };
+  }
+
+  async handleVnpayReturn(vnp_Params: any) {
+    const verification = this.vnpayService.verifyReturnUrl(vnp_Params);
+    
+    if (!verification.isValid) {
+      throw new BadRequestException('Invalid VNPay response');
+    }
+
+    const { orderId, amount } = verification;
+    
+    // Tìm đơn hàng
+    const order = await this.prisma.order.findFirst({
+      where: { orderCode: orderId }
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Cập nhật trạng thái đơn hàng
+    const responseCode = vnp_Params['vnp_ResponseCode'];
+    
+    if (responseCode === '00') {
+      // Thanh toán thành công
+      await this.prisma.$transaction(async (tx) => {
+        // Cập nhật trạng thái đơn hàng
+        await tx.order.update({
+          where: { id: order.id },
+          data: { status: 'CONFIRMED' }
+        });
+
+        // Trừ số lượng kho
+        const orderItems = await tx.orderItem.findMany({
+          where: { orderId: order.id },
+          include: { variant: true }
+        });
+
+        for (const item of orderItems) {
+          if (item.variantId && item.variant) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: {
+                stockQuantity: {
+                  decrement: item.quantity
+                }
+              }
+            });
+          }
+        }
+
+        // Xóa giỏ hàng
+        const cart = await tx.cart.findFirst({
+          where: { userId: order.userId }
+        });
+
+        if (cart) {
+          await tx.cartItem.deleteMany({
+            where: { cartId: cart.id }
+          });
+        }
+      });
+
+      return {
+        success: true,
+        message: 'Payment successful',
+        data: {
+          orderId: Number(order.id),
+          status: 'CONFIRMED'
+        }
+      };
+    } else {
+      // Thanh toán thất bại
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: { status: 'CANCELLED' }
+      });
+
+      return {
+        success: false,
+        message: 'Payment failed',
+        data: {
+          orderId: Number(order.id),
+          status: 'CANCELLED'
+        }
+      };
+    }
   }
 }

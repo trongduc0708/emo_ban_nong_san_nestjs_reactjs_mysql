@@ -8,18 +8,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentModule = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const payment_controller_1 = require("./payment.controller");
 const payment_service_1 = require("./payment.service");
+const vnpay_service_1 = require("./vnpay.service");
 const prisma_module_1 = require("../prisma/prisma.module");
 let PaymentModule = class PaymentModule {
 };
 exports.PaymentModule = PaymentModule;
 exports.PaymentModule = PaymentModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
+        imports: [prisma_module_1.PrismaModule, config_1.ConfigModule],
         controllers: [payment_controller_1.PaymentController],
-        providers: [payment_service_1.PaymentService],
-        exports: [payment_service_1.PaymentService],
+        providers: [payment_service_1.PaymentService, vnpay_service_1.VnpayService],
+        exports: [payment_service_1.PaymentService, vnpay_service_1.VnpayService],
     })
 ], PaymentModule);
 //# sourceMappingURL=payment.module.js.map

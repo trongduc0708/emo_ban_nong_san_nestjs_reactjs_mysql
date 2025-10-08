@@ -161,16 +161,30 @@ export default function Checkout() {
         throw new Error('Không tìm thấy giỏ hàng')
       }
 
-      const response = await paymentApi.processPayment({
-        cartId,
-        paymentMethod,
-        notes
-      })
+      if (paymentMethod === 'VNPAY') {
+        // VNPay payment
+        const response = await paymentApi.createVnpayPayment({
+          cartId,
+          notes
+        })
 
-      if (response.data.success) {
-        toast.success('Đặt hàng thành công!')
-        clearCart()
-        navigate(`/order-success/${response.data.data.orderId}`)
+        if (response.data.success) {
+          // Redirect to VNPay
+          window.location.href = response.data.data.paymentUrl
+        }
+      } else {
+        // COD payment
+        const response = await paymentApi.processPayment({
+          cartId,
+          paymentMethod,
+          notes
+        })
+
+        if (response.data.success) {
+          toast.success('Đặt hàng thành công!')
+          clearCart()
+          navigate(`/order-success/${response.data.data.orderId}`)
+        }
       }
     } catch (error: any) {
       console.error('Lỗi đặt hàng:', error)

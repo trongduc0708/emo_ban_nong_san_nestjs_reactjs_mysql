@@ -1,8 +1,10 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
+import { VnpayService } from './vnpay.service';
 export declare class PaymentService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly vnpayService;
+    constructor(prisma: PrismaService, vnpayService: VnpayService);
     processPayment(userId: number, dto: ProcessPaymentDto): Promise<{
         success: boolean;
         message: string;
@@ -74,6 +76,23 @@ export declare class PaymentService {
                 totalAmount: import("@prisma/client/runtime/library").Decimal;
                 shippingAddressSnapshot: import("@prisma/client/runtime/library").JsonValue | null;
             })[];
+        };
+    }>;
+    createVnpayPayment(userId: number, dto: ProcessPaymentDto, ipAddr: string): Promise<{
+        success: boolean;
+        data: {
+            paymentUrl: string;
+            orderId: number;
+            orderCode: string;
+            totalAmount: number;
+        };
+    }>;
+    handleVnpayReturn(vnp_Params: any): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            orderId: number;
+            status: string;
         };
     }>;
 }

@@ -184,14 +184,9 @@ export const paymentApi = {
   
   // Tạo thanh toán VNPAY
   createVnpayPayment: (data: {
-    orderId: number
-    amount: number
-    returnUrl: string
-  }) => api.post('/payment/vnpay', data),
-  
-  // Xử lý callback từ VNPAY
-  handleVnpayReturn: (params: any) =>
-    api.get('/payment/vnpay-return', { params }),
+    cartId: number
+    notes?: string
+  }) => api.post('/payment/vnpay/create', data),
 }
 
 // API cho Admin

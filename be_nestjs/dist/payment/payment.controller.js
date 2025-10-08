@@ -30,6 +30,39 @@ let PaymentController = class PaymentController {
         const userId = Number(req.user?.id);
         return this.paymentService.getOrderHistory(userId);
     }
+    async createVnpayPayment(req, dto) {
+        const userId = Number(req.user?.id);
+        const ipAddr = req.ip || req.connection.remoteAddress || '127.0.0.1';
+        return this.paymentService.createVnpayPayment(userId, dto, ipAddr);
+    }
+    async vnpayReturn(query, res) {
+        try {
+            const result = await this.paymentService.handleVnpayReturn(query);
+            if (result.success) {
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+                res.redirect(`${frontendUrl}/order-success/${result.data.orderId}`);
+            }
+            else {
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+                res.redirect(`${frontendUrl}/order-failed`);
+            }
+        }
+        catch (error) {
+            console.error('VNPay return error:', error);
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+            res.redirect(`${frontendUrl}/order-failed`);
+        }
+    }
+    async vnpayIpn(body) {
+        try {
+            const result = await this.paymentService.handleVnpayReturn(body);
+            return { RspCode: '00', Message: 'Success' };
+        }
+        catch (error) {
+            console.error('VNPay IPN error:', error);
+            return { RspCode: '99', Message: 'Error' };
+        }
+    }
 };
 exports.PaymentController = PaymentController;
 __decorate([
@@ -49,6 +82,30 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], PaymentController.prototype, "getOrderHistory", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('vnpay/create'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, process_payment_dto_1.ProcessPaymentDto]),
+    __metadata("design:returntype", Promise)
+], PaymentController.prototype, "createVnpayPayment", null);
+__decorate([
+    (0, common_1.Get)('vnpay/return'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], PaymentController.prototype, "vnpayReturn", null);
+__decorate([
+    (0, common_1.Post)('vnpay/ipn'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], PaymentController.prototype, "vnpayIpn", null);
 exports.PaymentController = PaymentController = __decorate([
     (0, common_1.Controller)('payment'),
     __metadata("design:paramtypes", [payment_service_1.PaymentService])

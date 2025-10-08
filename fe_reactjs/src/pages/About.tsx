@@ -188,12 +188,12 @@ export default function About() {
               <div className="text-center">
                 <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">📍</span>
-                </div>
+        </div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Địa chỉ</h3>
                 <p className="text-gray-600">123 Đường ABC, Quận XYZ, TP.HCM</p>
-              </div>
-            </div>
         </div>
+        </div>
+      </div>
       </div>
       </section>
     </div>

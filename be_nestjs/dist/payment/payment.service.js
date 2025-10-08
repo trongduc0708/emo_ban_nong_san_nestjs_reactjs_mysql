@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const vnpay_service_1 = require("./vnpay.service");
 let PaymentService = class PaymentService {
     prisma;
-    constructor(prisma) {
+    vnpayService;
+    constructor(prisma, vnpayService) {
         this.prisma = prisma;
+        this.vnpayService = vnpayService;
     }
     async processPayment(userId, dto) {
         const { cartId, paymentMethod = 'COD', notes } = dto;
@@ -120,10 +123,159 @@ let PaymentService = class PaymentService {
         });
         return { success: true, data: { orders } };
     }
+    async createVnpayPayment(userId, dto, ipAddr) {
+        console.log('🔍 createVnpayPayment called with:', { userId, dto, ipAddr });
+        const { cartId, notes } = dto;
+        const cart = await this.prisma.cart.findFirst({
+            where: {
+                id: cartId,
+                userId: BigInt(userId)
+            },
+            include: {
+                items: {
+                    include: {
+                        product: {
+                            include: { variants: true }
+                        },
+                        variant: true
+                    }
+                }
+            }
+        });
+        if (!cart) {
+            throw new common_1.NotFoundException('Giỏ hàng không tồn tại');
+        }
+        if (cart.items.length === 0) {
+            throw new common_1.BadRequestException('Giỏ hàng trống');
+        }
+        for (const item of cart.items) {
+            const variant = item.variant;
+            if (variant && variant.stockQuantity < item.quantity) {
+                throw new common_1.BadRequestException(`Biến thể "${variant.variantName}" chỉ còn ${variant.stockQuantity} sản phẩm trong kho`);
+            }
+        }
+        const totalAmount = cart.items.reduce((sum, item) => sum + Number(item.unitPriceSnapshot) * item.quantity, 0);
+        const order = await this.prisma.order.create({
+            data: {
+                orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                userId: BigInt(userId),
+                status: 'PENDING',
+                paymentMethod: 'VNPAY',
+                notes,
+                totalAmount: totalAmount
+            }
+        });
+        for (const item of cart.items) {
+            const product = item.product;
+            const variant = item.variant;
+            const unitPrice = Number(item.unitPriceSnapshot);
+            const totalPrice = unitPrice * item.quantity;
+            await this.prisma.orderItem.create({
+                data: {
+                    orderId: order.id,
+                    productId: item.productId,
+                    variantId: item.variantId,
+                    productName: product.name,
+                    variantName: variant?.variantName || null,
+                    sku: product.sku,
+                    quantity: item.quantity,
+                    unitPrice: unitPrice,
+                    totalPrice: totalPrice
+                }
+            });
+        }
+        const orderInfo = `Thanh toan don hang ${order.orderCode}`;
+        console.log('🔍 Calling vnpayService.createPaymentUrl with:', {
+            orderCode: order.orderCode,
+            totalAmount,
+            orderInfo,
+            ipAddr
+        });
+        const paymentUrl = this.vnpayService.createPaymentUrl(order.orderCode, totalAmount, orderInfo, ipAddr);
+        console.log('🔍 Payment URL created:', paymentUrl);
+        return {
+            success: true,
+            data: {
+                paymentUrl,
+                orderId: Number(order.id),
+                orderCode: order.orderCode,
+                totalAmount
+            }
+        };
+    }
+    async handleVnpayReturn(vnp_Params) {
+        const verification = this.vnpayService.verifyReturnUrl(vnp_Params);
+        if (!verification.isValid) {
+            throw new common_1.BadRequestException('Invalid VNPay response');
+        }
+        const { orderId, amount } = verification;
+        const order = await this.prisma.order.findFirst({
+            where: { orderCode: orderId }
+        });
+        if (!order) {
+            throw new common_1.NotFoundException('Order not found');
+        }
+        const responseCode = vnp_Params['vnp_ResponseCode'];
+        if (responseCode === '00') {
+            await this.prisma.$transaction(async (tx) => {
+                await tx.order.update({
+                    where: { id: order.id },
+                    data: { status: 'CONFIRMED' }
+                });
+                const orderItems = await tx.orderItem.findMany({
+                    where: { orderId: order.id },
+                    include: { variant: true }
+                });
+                for (const item of orderItems) {
+                    if (item.variantId && item.variant) {
+                        await tx.productVariant.update({
+                            where: { id: item.variantId },
+                            data: {
+                                stockQuantity: {
+                                    decrement: item.quantity
+                                }
+                            }
+                        });
+                    }
+                }
+                const cart = await tx.cart.findFirst({
+                    where: { userId: order.userId }
+                });
+                if (cart) {
+                    await tx.cartItem.deleteMany({
+                        where: { cartId: cart.id }
+                    });
+                }
+            });
+            return {
+                success: true,
+                message: 'Payment successful',
+                data: {
+                    orderId: Number(order.id),
+                    status: 'CONFIRMED'
+                }
+            };
+        }
+        else {
+            await this.prisma.order.update({
+                where: { id: order.id },
+                data: { status: 'CANCELLED' }
+            });
+            return {
+                success: false,
+                message: 'Payment failed',
+                data: {
+                    orderId: Number(order.id),
+                    status: 'CANCELLED'
+                }
+            };
+        }
+    }
 };
 exports.PaymentService = PaymentService;
 exports.PaymentService = PaymentService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        vnpay_service_1.VnpayService])
 ], PaymentService);
 //# sourceMappingURL=payment.service.js.map

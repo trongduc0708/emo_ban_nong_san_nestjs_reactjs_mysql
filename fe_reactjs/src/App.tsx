@@ -17,6 +17,7 @@ import Profile from '@/pages/Profile'
 import Orders from '@/pages/Orders'
 import OrderDetail from '@/pages/OrderDetail'
 import OrderSuccess from '@/pages/OrderSuccess'
+import OrderFailed from '@/pages/OrderFailed'
 import Wishlist from '@/pages/Wishlist'
 import AdminDashboard from '@/pages/admin/Dashboard'
 import ProtectedRoute from '@/components/ProtectedRoute'
@@ -76,6 +77,7 @@ function App() {
                 <OrderSuccess />
               </ProtectedRoute>
             } />
+            <Route path="/order-failed" element={<OrderFailed />} />
             
             {/* Admin */}
             <Route path="/admin/*" element={
