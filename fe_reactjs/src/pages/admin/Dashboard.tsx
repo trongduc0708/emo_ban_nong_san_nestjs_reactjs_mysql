@@ -1,7 +1,8 @@
 import React from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Users, Package, DollarSign, TrendingUp, Plus, Eye } from 'lucide-react'
+import { Users, Package, DollarSign, TrendingUp, Plus, Eye, Shield } from 'lucide-react'
+import AdminLayout from '@/components/AdminLayout'
 
 export default function AdminDashboard() {
   // Mock data - sẽ thay thế bằng API call
@@ -87,12 +88,21 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminLayout>
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Dashboard</h1>
-        <p className="text-lg text-gray-600">
-          Tổng quan về hoạt động kinh doanh
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Admin Dashboard</h1>
+            <p className="text-lg text-gray-600">
+              Tổng quan về hoạt động kinh doanh
+            </p>
+          </div>
+          <div className="flex items-center space-x-2 bg-green-100 text-green-800 px-3 py-2 rounded-lg">
+            <Shield className="w-5 h-5" />
+            <span className="font-medium">Admin Access</span>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -227,6 +237,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+    </AdminLayout>
   )
 }

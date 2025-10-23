@@ -11,6 +11,10 @@ import { CategoriesModule } from './categories/categories.module';
 import { AddressesModule } from './addresses/addresses.module';
 import { StaticModule } from './static/static.module';
 import { WishlistModule } from './wishlist/wishlist.module';
+import { AdminModule } from './admin/admin.module';
+import { UploadModule } from './upload/upload.module';
+import { CouponsModule } from './coupons/coupons.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -25,7 +29,11 @@ import { WishlistModule } from './wishlist/wishlist.module';
     CategoriesModule, 
     AddressesModule, 
     StaticModule, 
-    WishlistModule
+    WishlistModule,
+    AdminModule,
+    UploadModule,
+    CouponsModule,
+    OrdersModule
   ],
   controllers: [AppController],
   providers: [AppService],

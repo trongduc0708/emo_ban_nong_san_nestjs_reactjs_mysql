@@ -59,9 +59,9 @@ export default function Login() {
 
     try {
       setIsLoading(true)
-      await login(formData.email, formData.password)
+      const { redirectTo } = await login(formData.email, formData.password)
       toast.success('Đăng nhập thành công!')
-      navigate('/')
+      navigate(redirectTo)
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Đăng nhập thất bại')
     } finally {
@@ -105,8 +105,12 @@ export default function Login() {
             const result = await authApi.googleLogin(credential)
             localStorage.setItem('token', result.data.token)
             localStorage.setItem('user', JSON.stringify(result.data.user))
+            
+            // Xác định redirect path dựa trên role
+            const redirectTo = result.data.user.role === 'admin' ? '/admin' : '/'
+            
             toast.success('Đăng nhập Google thành công!')
-            navigate('/')
+            navigate(redirectTo)
           } catch (error: any) {
             toast.error(error.response?.data?.error || 'Đăng nhập Google thất bại')
           } finally {

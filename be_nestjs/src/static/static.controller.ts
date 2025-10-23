@@ -15,4 +15,15 @@ export class StaticController {
     
     return res.sendFile(filePath);
   }
+
+  @Get('products/:filename')
+  async getProductImage(@Param('filename') filename: string, @Res() res: Response) {
+    const filePath = join(process.cwd(), 'uploads', 'products', filename);
+    
+    if (!existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    
+    return res.sendFile(filePath);
+  }
 }

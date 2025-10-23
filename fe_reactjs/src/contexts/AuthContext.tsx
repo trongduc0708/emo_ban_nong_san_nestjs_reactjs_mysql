@@ -15,8 +15,8 @@ interface User {
 interface AuthContextType {
   user: User | null
   token: string | null
-  login: (email: string, password: string) => Promise<void>
-  register: (userData: RegisterData) => Promise<void>
+  login: (email: string, password: string) => Promise<{ redirectTo: string }>
+  register: (userData: RegisterData) => Promise<{ redirectTo: string }>
   logout: () => void
   setUser: (user: User | null) => void
   loading: boolean
@@ -115,6 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Lưu vào localStorage
       localStorage.setItem('token', newToken)
       localStorage.setItem('user', JSON.stringify(userData))
+      
+      // Xác định redirect path dựa trên role
+      const redirectTo = userData.role === 'admin' ? '/admin' : '/'
+      
+      return { redirectTo }
     } catch (error) {
       throw error
     }
@@ -132,6 +137,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Lưu vào localStorage
       localStorage.setItem('token', newToken)
       localStorage.setItem('user', JSON.stringify(newUser))
+      
+      // Xác định redirect path dựa trên role
+      const redirectTo = newUser.role === 'admin' ? '/admin' : '/'
+      
+      return { redirectTo }
     } catch (error) {
       throw error
     }

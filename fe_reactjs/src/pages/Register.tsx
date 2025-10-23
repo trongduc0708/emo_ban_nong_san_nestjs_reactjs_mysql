@@ -39,14 +39,14 @@ export default function Register() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setIsLoading(true)
-      await registerUser({
+      const { redirectTo } = await registerUser({
         email: data.email,
         password: data.password,
         fullName: data.fullName,
         phone: data.phone
       })
       toast.success('Đăng ký thành công!')
-      navigate('/')
+      navigate(redirectTo)
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Đăng ký thất bại')
     } finally {
@@ -79,8 +79,12 @@ export default function Register() {
             const result = await authApi.googleLogin(credential)
             localStorage.setItem('token', result.data.token)
             localStorage.setItem('user', JSON.stringify(result.data.user))
+            
+            // Xác định redirect path dựa trên role
+            const redirectTo = result.data.user.role === 'admin' ? '/admin' : '/'
+            
             toast.success('Đăng ký Google thành công!')
-            navigate('/')
+            navigate(redirectTo)
           } catch (error: any) {
             toast.error(error.response?.data?.error || 'Đăng ký Google thất bại')
           } finally {

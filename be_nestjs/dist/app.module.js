@@ -20,6 +20,10 @@ const categories_module_1 = require("./categories/categories.module");
 const addresses_module_1 = require("./addresses/addresses.module");
 const static_module_1 = require("./static/static.module");
 const wishlist_module_1 = require("./wishlist/wishlist.module");
+const admin_module_1 = require("./admin/admin.module");
+const upload_module_1 = require("./upload/upload.module");
+const coupons_module_1 = require("./coupons/coupons.module");
+const orders_module_1 = require("./orders/orders.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -37,7 +41,11 @@ exports.AppModule = AppModule = __decorate([
             categories_module_1.CategoriesModule,
             addresses_module_1.AddressesModule,
             static_module_1.StaticModule,
-            wishlist_module_1.WishlistModule
+            wishlist_module_1.WishlistModule,
+            admin_module_1.AdminModule,
+            upload_module_1.UploadModule,
+            coupons_module_1.CouponsModule,
+            orders_module_1.OrdersModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

@@ -208,6 +208,42 @@ export const adminApi = {
   // Quản lý người dùng
   getUsers: (params?: any) => api.get('/admin/users', { params }),
   updateUser: (id: number, data: any) => api.put(`/admin/users/${id}`, data),
+  
+  // Categories Management
+  getCategories: () => api.get('/admin/categories'),
+  getCategory: (id: number) => api.get(`/admin/categories/${id}`),
+  createCategory: (data: any) => api.post('/admin/categories', data),
+  updateCategory: (id: number, data: any) => api.put(`/admin/categories/${id}`, data),
+  deleteCategory: (id: number) => api.delete(`/admin/categories/${id}`),
+  
+  // Upload
+  uploadProductImage: (file: File, productId?: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (productId) {
+      formData.append('productId', productId);
+    }
+    return api.post('/upload/product', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Coupons Management
+  getCoupons: (params?: any) => api.get('/coupons', { params }),
+  getCoupon: (id: number) => api.get(`/coupons/${id}`),
+  createCoupon: (data: any) => api.post('/coupons', data),
+  updateCoupon: (id: number, data: any) => api.put(`/coupons/${id}`, data),
+  deleteCoupon: (id: number) => api.delete(`/coupons/${id}`),
+  validateCoupon: (data: any) => api.post('/coupons/validate', data),
+
+  // Orders Management
+  getOrders: (params?: any) => api.get('/orders', { params }),
+  getOrder: (id: number) => api.get(`/orders/${id}`),
+  updateOrderStatus: (id: number, status: string) => api.put(`/orders/${id}/status`, { status }),
+  updateOrderPaymentStatus: (id: number, paymentStatus: string) => api.put(`/orders/${id}/payment-status`, { paymentStatus }),
+  getOrderStats: () => api.get('/orders/stats/overview'),
 }
 
 // API cho Addresses
