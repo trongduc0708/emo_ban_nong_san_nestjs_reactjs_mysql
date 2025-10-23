@@ -13,6 +13,7 @@ export declare class AuthService {
         phone?: string;
     }): Promise<{
         success: boolean;
+        token: string;
         user: {
             id: number;
             email: string;

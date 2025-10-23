@@ -9,6 +9,7 @@ export declare class AuthController {
         phone?: string;
     }): Promise<{
         success: boolean;
+        token: string;
         user: {
             id: number;
             email: string;

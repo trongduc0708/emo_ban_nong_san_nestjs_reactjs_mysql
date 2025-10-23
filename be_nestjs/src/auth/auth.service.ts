@@ -33,8 +33,12 @@ export class AuthService {
       select: { id: true, email: true, fullName: true, phone: true, avatarUrl: true, role: true },
     });
 
+    // Tạo JWT token cho user mới đăng ký
+    const payload = { id: Number(user.id), email: user.email, role: user.role };
+    const token = await this.jwt.signAsync(payload);
+
     const safeUser = { ...user, id: Number(user.id) };
-    return { success: true, user: safeUser };
+    return { success: true, token, user: safeUser };
   }
 
   async login(dto: { email: string; password: string }) {

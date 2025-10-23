@@ -34,9 +34,16 @@ export default function Register() {
   } = useForm<RegisterFormData>()
 
   const password = watch('password')
+  const watchedValues = watch()
+  
+  // Debug: Log watched values
+  console.log('Watched values:', watchedValues)
 
   // Xử lý đăng ký thông thường
   const onSubmit = async (data: RegisterFormData) => {
+    console.log('Form data:', data)
+    console.log('Form errors:', errors)
+    
     try {
       setIsLoading(true)
       const { redirectTo } = await registerUser({
@@ -48,6 +55,7 @@ export default function Register() {
       toast.success('Đăng ký thành công!')
       navigate(redirectTo)
     } catch (error: any) {
+      console.error('Register error:', error)
       toast.error(error.response?.data?.error || 'Đăng ký thất bại')
     } finally {
       setIsLoading(false)
