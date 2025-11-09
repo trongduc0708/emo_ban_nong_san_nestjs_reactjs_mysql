@@ -6,6 +6,7 @@ import AdminLayout from '@/components/AdminLayout'
 import CouponForm from '@/components/admin/CouponForm'
 import { adminApi } from '@/services/api'
 import toast from 'react-hot-toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Coupon {
   id: string
@@ -53,6 +54,8 @@ export default function AdminCoupons() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [couponToDelete, setCouponToDelete] = useState<string | null>(null)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -98,16 +101,24 @@ export default function AdminCoupons() {
    * Xóa coupon với xác nhận từ người dùng
    * @param id - ID của coupon cần xóa
    */
-  const handleDeleteCoupon = async (id: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa coupon này?')) {
-      try {
-        await adminApi.deleteCoupon(parseInt(id))
-        toast.success('Xóa coupon thành công')
-        loadCoupons()
-      } catch (error: any) {
-        console.error('Error deleting coupon:', error)
-        toast.error(error.response?.data?.message || 'Lỗi khi xóa coupon')
-      }
+  const handleDeleteCoupon = (id: string) => {
+    setCouponToDelete(id)
+    setShowConfirmDialog(true)
+  }
+
+  const confirmDeleteCoupon = async () => {
+    if (!couponToDelete) return
+    try {
+      await adminApi.deleteCoupon(parseInt(couponToDelete))
+      toast.success('Xóa coupon thành công')
+      loadCoupons()
+      setShowConfirmDialog(false)
+      setCouponToDelete(null)
+    } catch (error: any) {
+      console.error('Error deleting coupon:', error)
+      toast.error(error.response?.data?.message || 'Lỗi khi xóa coupon')
+      setShowConfirmDialog(false)
+      setCouponToDelete(null)
     }
   }
 
@@ -515,6 +526,21 @@ export default function AdminCoupons() {
             onSuccess={handleFormSuccess}
           />
         )}
+
+        {/* Confirm Dialog */}
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          title="Xác nhận xóa coupon"
+          message="Bạn có chắc chắn muốn xóa coupon này? Hành động này không thể hoàn tác."
+          confirmText="Xóa"
+          cancelText="Hủy"
+          onConfirm={confirmDeleteCoupon}
+          onCancel={() => {
+            setShowConfirmDialog(false)
+            setCouponToDelete(null)
+          }}
+          variant="danger"
+        />
       </div>
     </AdminLayout>
   )

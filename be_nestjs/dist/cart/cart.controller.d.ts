@@ -17,10 +17,10 @@ export declare class CartController {
                         imageUrl: string;
                     }[];
                 } & {
-                    name: string;
                     id: bigint;
                     createdAt: Date;
                     updatedAt: Date;
+                    name: string;
                     categoryId: bigint | null;
                     slug: string;
                     sku: string | null;
@@ -61,10 +61,10 @@ export declare class CartController {
                         imageUrl: string;
                     }[];
                 } & {
-                    name: string;
                     id: bigint;
                     createdAt: Date;
                     updatedAt: Date;
+                    name: string;
                     categoryId: bigint | null;
                     slug: string;
                     sku: string | null;
@@ -105,10 +105,10 @@ export declare class CartController {
                         imageUrl: string;
                     }[];
                 } & {
-                    name: string;
                     id: bigint;
                     createdAt: Date;
                     updatedAt: Date;
+                    name: string;
                     categoryId: bigint | null;
                     slug: string;
                     sku: string | null;
@@ -149,10 +149,10 @@ export declare class CartController {
                         imageUrl: string;
                     }[];
                 } & {
-                    name: string;
                     id: bigint;
                     createdAt: Date;
                     updatedAt: Date;
+                    name: string;
                     categoryId: bigint | null;
                     slug: string;
                     sku: string | null;
@@ -193,10 +193,10 @@ export declare class CartController {
                         imageUrl: string;
                     }[];
                 } & {
-                    name: string;
                     id: bigint;
                     createdAt: Date;
                     updatedAt: Date;
+                    name: string;
                     categoryId: bigint | null;
                     slug: string;
                     sku: string | null;

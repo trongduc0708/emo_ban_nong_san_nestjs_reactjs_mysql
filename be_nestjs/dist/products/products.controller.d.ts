@@ -33,9 +33,9 @@ export declare class ProductsController {
                     unitLabel: string | null;
                     stockQuantity: number;
                 }[];
-                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 slug: string;
                 sku: string | null;
                 description: string | null;
@@ -112,9 +112,9 @@ export declare class ProductsController {
                 productId: bigint;
                 imageUrl: string;
             }[];
-            name: string;
             createdAt: Date;
             updatedAt: Date;
+            name: string;
             slug: string;
             sku: string | null;
             description: string | null;
@@ -159,9 +159,9 @@ export declare class ProductsController {
                 reviews: {
                     rating: number;
                 }[];
-                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 slug: string;
                 sku: string | null;
                 description: string | null;
@@ -207,9 +207,9 @@ export declare class ProductsController {
                 reviews: {
                     rating: number;
                 }[];
-                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 slug: string;
                 sku: string | null;
                 description: string | null;

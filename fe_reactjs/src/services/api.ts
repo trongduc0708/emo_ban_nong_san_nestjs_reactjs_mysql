@@ -207,7 +207,9 @@ export const adminApi = {
   
   // Quản lý người dùng
   getUsers: (params?: any) => api.get('/admin/users', { params }),
+  getUser: (id: number) => api.get(`/admin/users/${id}`),
   updateUser: (id: number, data: any) => api.put(`/admin/users/${id}`, data),
+  updateUserRole: (id: number, role: 'customer' | 'admin') => api.put(`/admin/users/${id}/role`, { role }),
   
   // Categories Management
   getCategories: () => api.get('/admin/categories'),
@@ -215,6 +217,21 @@ export const adminApi = {
   createCategory: (data: any) => api.post('/admin/categories', data),
   updateCategory: (id: number, data: any) => api.put(`/admin/categories/${id}`, data),
   deleteCategory: (id: number) => api.delete(`/admin/categories/${id}`),
+  
+  // Reviews Management
+  getReviews: (params?: any) => api.get('/admin/reviews', { params }),
+  getReview: (id: number) => api.get(`/admin/reviews/${id}`),
+  approveReview: (id: number) => api.put(`/admin/reviews/${id}/approve`),
+  rejectReview: (id: number) => api.put(`/admin/reviews/${id}/reject`),
+  deleteReview: (id: number) => api.delete(`/admin/reviews/${id}`),
+  
+  // Settings Management
+  getSettings: () => api.get('/admin/settings'),
+  updateSetting: (key: string, value: string) => api.put(`/admin/settings/${key}`, { value }),
+  
+  // Reports Management
+  getReports: (params?: any) => api.get('/admin/reports', { params }),
+  getInventoryReport: (params?: any) => api.get('/admin/reports/inventory', { params }),
   
   // Upload
   uploadProductImage: (file: File, productId?: string) => {
@@ -268,6 +285,16 @@ export const addressesApi = {
     isDefault: boolean
   }>) => api.put(`/addresses/${id}`, data),
   deleteAddress: (id: number) => api.delete(`/addresses/${id}`),
+}
+
+// API cho Chatbot
+export const chatbotApi = {
+  chat: (message: string, userId?: number) =>
+    api.post('/chatbot/chat', { message, userId }),
+  searchProducts: (query: string) =>
+    api.get('/chatbot/search', { params: { q: query } }),
+  getProductInfo: (id: number) =>
+    api.get(`/chatbot/product/${id}`),
 }
 
 export default api

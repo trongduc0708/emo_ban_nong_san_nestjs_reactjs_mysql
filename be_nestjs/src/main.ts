@@ -4,8 +4,22 @@ import { AppModule } from './app.module';
 import { SerializeBigIntInterceptor } from './common/interceptors/serialize-bigint.interceptor';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import * as fs from 'fs';
 
 async function bootstrap() {
+  // Debug: Kiểm tra file .env
+  const envPath = join(process.cwd(), '.env');
+  console.log('=== Environment Debug ===');
+  console.log(`Current working directory: ${process.cwd()}`);
+  console.log(`Looking for .env at: ${envPath}`);
+  console.log(`.env file exists: ${fs.existsSync(envPath)}`);
+  if (fs.existsSync(envPath)) {
+    console.log('.env file found!');
+  } else {
+    console.warn('.env file NOT found at expected location!');
+  }
+  console.log('=========================');
+  
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Set global API prefix to match FE base URL (/api)

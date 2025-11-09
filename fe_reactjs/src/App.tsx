@@ -26,6 +26,9 @@ import AdminCategories from '@/pages/admin/Categories'
 import AdminCoupons from '@/pages/admin/Coupons'
 import AdminOrders from '@/pages/admin/Orders'
 import AdminUsers from '@/pages/admin/Users'
+import AdminReviews from '@/pages/admin/Reviews'
+import AdminSettings from '@/pages/admin/Settings'
+import AdminReports from '@/pages/admin/Reports'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import About from '@/pages/About'
 import Policy from '@/pages/Policy'
@@ -63,6 +66,21 @@ function App() {
         <Route path="/admin/users" element={
           <ProtectedRoute requireAdmin>
             <AdminUsers />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/reviews" element={
+          <ProtectedRoute requireAdmin>
+            <AdminReviews />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/settings" element={
+          <ProtectedRoute requireAdmin>
+            <AdminSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/reports" element={
+          <ProtectedRoute requireAdmin>
+            <AdminReports />
           </ProtectedRoute>
         } />
         

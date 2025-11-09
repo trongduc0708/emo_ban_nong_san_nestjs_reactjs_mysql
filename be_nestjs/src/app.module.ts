@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -15,11 +16,20 @@ import { AdminModule } from './admin/admin.module';
 import { UploadModule } from './upload/upload.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { OrdersModule } from './orders/orders.module';
+import { ChatbotModule } from './chatbot/chatbot.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      // Thử nhiều đường dẫn có thể cho .env file
+      envFilePath: [
+        join(process.cwd(), '.env'),
+        join(__dirname, '..', '.env'),
+        '.env'
+      ],
+      cache: true,
+      expandVariables: true,
     }),
     PrismaModule, 
     AuthModule, 
@@ -33,7 +43,8 @@ import { OrdersModule } from './orders/orders.module';
     AdminModule,
     UploadModule,
     CouponsModule,
-    OrdersModule
+    OrdersModule,
+    ChatbotModule
   ],
   controllers: [AppController],
   providers: [AppService],

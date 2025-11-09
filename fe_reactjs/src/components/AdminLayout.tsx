@@ -12,7 +12,8 @@ import {
   LogOut,
   User,
   Folder,
-  Tag
+  Tag,
+  Star
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -61,6 +62,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin/users',
       icon: Users,
       current: location.pathname.startsWith('/admin/users')
+    },
+    {
+      name: 'Đánh giá',
+      href: '/admin/reviews',
+      icon: Star,
+      current: location.pathname.startsWith('/admin/reviews')
     },
     {
       name: 'Báo cáo',

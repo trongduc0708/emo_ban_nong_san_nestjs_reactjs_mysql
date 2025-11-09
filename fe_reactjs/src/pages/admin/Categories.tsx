@@ -18,6 +18,7 @@ import AdminLayout from '@/components/AdminLayout'
 import CategoryForm from '../../components/admin/CategoryForm'
 import { adminApi } from '@/services/api'
 import toast from 'react-hot-toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Category {
   id: string
@@ -44,6 +45,8 @@ export default function AdminCategories() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -91,16 +94,24 @@ export default function AdminCategories() {
    * Kiểm tra ràng buộc: không xóa danh mục có sản phẩm hoặc danh mục con
    * @param id - ID của danh mục cần xóa
    */
-  const handleDeleteCategory = async (id: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
-      try {
-        await adminApi.deleteCategory(parseInt(id))
-        toast.success('Xóa danh mục thành công')
-        loadCategories()
-      } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Lỗi khi xóa danh mục')
-        console.error('Error deleting category:', error)
-      }
+  const handleDeleteCategory = (id: string) => {
+    setCategoryToDelete(id)
+    setShowConfirmDialog(true)
+  }
+
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return
+    try {
+      await adminApi.deleteCategory(parseInt(categoryToDelete))
+      toast.success('Xóa danh mục thành công')
+      loadCategories()
+      setShowConfirmDialog(false)
+      setCategoryToDelete(null)
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Lỗi khi xóa danh mục')
+      console.error('Error deleting category:', error)
+      setShowConfirmDialog(false)
+      setCategoryToDelete(null)
     }
   }
 
@@ -455,6 +466,21 @@ export default function AdminCategories() {
             onSuccess={handleFormSuccess}
           />
         )}
+
+        {/* Confirm Dialog */}
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          title="Xác nhận xóa danh mục"
+          message="Bạn có chắc chắn muốn xóa danh mục này? Hành động này không thể hoàn tác."
+          confirmText="Xóa"
+          cancelText="Hủy"
+          onConfirm={confirmDeleteCategory}
+          onCancel={() => {
+            setShowConfirmDialog(false)
+            setCategoryToDelete(null)
+          }}
+          variant="danger"
+        />
       </div>
     </AdminLayout>
   )

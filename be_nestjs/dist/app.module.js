@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const path_1 = require("path");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const prisma_module_1 = require("./prisma/prisma.module");
@@ -32,6 +33,13 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
+                envFilePath: [
+                    (0, path_1.join)(process.cwd(), '.env'),
+                    (0, path_1.join)(__dirname, '..', '.env'),
+                    '.env'
+                ],
+                cache: true,
+                expandVariables: true,
             }),
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,

@@ -5,6 +5,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { ShoppingCart, User, LogOut, Menu, X, Heart } from 'lucide-react'
 import { useState } from 'react'
+import Chatbot from './Chatbot'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -302,6 +303,9 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </footer>
+
+      {/* Chatbot */}
+      <Chatbot />
     </div>
   )
 }

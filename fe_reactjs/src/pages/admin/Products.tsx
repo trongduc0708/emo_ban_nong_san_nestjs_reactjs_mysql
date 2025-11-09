@@ -16,6 +16,7 @@ import AdminLayout from '@/components/AdminLayout'
 import ProductForm from '@/components/admin/ProductForm'
 import { adminApi } from '@/services/api'
 import toast from 'react-hot-toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Product {
   id: number
@@ -66,6 +67,8 @@ export default function AdminProducts() {
   })
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<number | null>(null)
 
   /**
    * Tải danh sách sản phẩm từ API với phân trang, tìm kiếm và lọc
@@ -183,16 +186,24 @@ export default function AdminProducts() {
    * Xóa sản phẩm với xác nhận từ người dùng
    * @param id - ID của sản phẩm cần xóa
    */
-  const handleDeleteProduct = async (id: number) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-      try {
-        await adminApi.deleteProduct(id)
-        toast.success('Xóa sản phẩm thành công')
-        loadProducts()
-      } catch (error) {
-        toast.error('Lỗi khi xóa sản phẩm')
-        console.error('Error deleting product:', error)
-      }
+  const handleDeleteProduct = (id: number) => {
+    setProductToDelete(id)
+    setShowConfirmDialog(true)
+  }
+
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete) return
+    try {
+      await adminApi.deleteProduct(productToDelete)
+      toast.success('Xóa sản phẩm thành công')
+      loadProducts()
+      setShowConfirmDialog(false)
+      setProductToDelete(null)
+    } catch (error) {
+      toast.error('Lỗi khi xóa sản phẩm')
+      console.error('Error deleting product:', error)
+      setShowConfirmDialog(false)
+      setProductToDelete(null)
     }
   }
 
@@ -605,6 +616,21 @@ export default function AdminProducts() {
             onSuccess={handleFormSuccess}
           />
         )}
+
+        {/* Confirm Dialog */}
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          title="Xác nhận xóa sản phẩm"
+          message="Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác."
+          confirmText="Xóa"
+          cancelText="Hủy"
+          onConfirm={confirmDeleteProduct}
+          onCancel={() => {
+            setShowConfirmDialog(false)
+            setProductToDelete(null)
+          }}
+          variant="danger"
+        />
       </div>
     </AdminLayout>
   )
