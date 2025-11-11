@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { CouponsService } from './coupons.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
@@ -53,6 +53,14 @@ export class CouponsController {
    */
   @Post('validate')
   async validateCoupon(@Body() data: { code: string; userId: number; orderAmount: number }) {
-    return this.couponsService.validateCoupon(data.code, data.userId, data.orderAmount);
+    try {
+      const result = await this.couponsService.validateCoupon(data.code, data.userId, data.orderAmount);
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error: any) {
+      throw new BadRequestException(error.message || 'Mã khuyến mãi không hợp lệ');
+    }
   }
 }

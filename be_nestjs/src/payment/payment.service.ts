@@ -2,16 +2,18 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
 import { VnpayService } from './vnpay.service';
+import { CouponsService } from '../coupons/coupons.service';
 
 @Injectable()
 export class PaymentService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly vnpayService: VnpayService
+    private readonly vnpayService: VnpayService,
+    private readonly couponsService: CouponsService
   ) {}
 
   async processPayment(userId: number, dto: ProcessPaymentDto) {
-    const { cartId, paymentMethod = 'COD', notes } = dto;
+    const { cartId, paymentMethod = 'COD', notes, couponCode } = dto;
 
     // Lấy giỏ hàng và kiểm tra quyền sở hữu
     const cart = await this.prisma.cart.findFirst({
@@ -52,22 +54,48 @@ export class PaymentService {
       }
     }
 
+    // Tính toán tổng tiền và xử lý coupon
+    const subtotalAmount = cart.items.reduce((sum, item) => 
+      sum + Number(item.unitPriceSnapshot) * item.quantity, 0
+    );
+    
+    let discountAmount = 0;
+    let couponId: bigint | null = null;
+    
+    if (couponCode) {
+      try {
+        const couponValidation = await this.couponsService.validateCoupon(
+          couponCode,
+          userId,
+          subtotalAmount
+        );
+        discountAmount = couponValidation.discountAmount;
+        couponId = BigInt(couponValidation.coupon.id);
+      } catch (error: any) {
+        throw new BadRequestException(error.message || 'Mã khuyến mãi không hợp lệ');
+      }
+    }
+
+    const shippingFee = 20000; // Phí vận chuyển cố định
+    const totalAmount = subtotalAmount - discountAmount + shippingFee;
+
     // Bắt đầu transaction để đảm bảo tính nhất quán
     return await this.prisma.$transaction(async (tx) => {
       // Tạo đơn hàng
-      const totalAmount = cart.items.reduce((sum, item) => 
-        sum + Number(item.unitPriceSnapshot) * item.quantity, 0
-      );
-      
       const order = await tx.order.create({
         data: {
           orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           userId: BigInt(userId),
+          ...(couponId && { couponId: couponId }),
           status: 'PENDING',
           paymentMethod: paymentMethod,
-          notes,
-          totalAmount: totalAmount
-        }
+          paymentStatus: paymentMethod === 'COD' ? 'UNPAID' : 'UNPAID',
+          subtotalAmount: subtotalAmount,
+          discountAmount: discountAmount,
+          shippingFee: shippingFee,
+          totalAmount: totalAmount,
+          notes
+        } as any
       });
 
       // Tạo order items và TRỪ SỐ LƯỢNG KHO
@@ -144,7 +172,7 @@ export class PaymentService {
   async createVnpayPayment(userId: number, dto: ProcessPaymentDto, ipAddr: string) {
     console.log('🔍 createVnpayPayment called with:', { userId, dto, ipAddr });
     
-    const { cartId, notes } = dto;
+    const { cartId, notes, couponCode } = dto;
 
     // Lấy giỏ hàng và kiểm tra quyền sở hữu
     const cart = await this.prisma.cart.findFirst({
@@ -182,20 +210,46 @@ export class PaymentService {
       }
     }
 
-    // Tạo đơn hàng với status PENDING
-    const totalAmount = cart.items.reduce((sum, item) => 
+    // Tính toán tổng tiền và xử lý coupon
+    const subtotalAmount = cart.items.reduce((sum, item) => 
       sum + Number(item.unitPriceSnapshot) * item.quantity, 0
     );
+    
+    let discountAmount = 0;
+    let couponId: bigint | null = null;
+    
+    if (couponCode) {
+      try {
+        const couponValidation = await this.couponsService.validateCoupon(
+          couponCode,
+          userId,
+          subtotalAmount
+        );
+        discountAmount = couponValidation.discountAmount;
+        couponId = BigInt(couponValidation.coupon.id);
+      } catch (error: any) {
+        throw new BadRequestException(error.message || 'Mã khuyến mãi không hợp lệ');
+      }
+    }
 
+    const shippingFee = 20000; // Phí vận chuyển cố định
+    const totalAmount = subtotalAmount - discountAmount + shippingFee;
+
+    // Tạo đơn hàng với status PENDING
     const order = await this.prisma.order.create({
       data: {
         orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         userId: BigInt(userId),
+        ...(couponId && { couponId: couponId }),
         status: 'PENDING',
         paymentMethod: 'VNPAY',
-        notes,
-        totalAmount: totalAmount
-      }
+        paymentStatus: 'UNPAID',
+        subtotalAmount: subtotalAmount,
+        discountAmount: discountAmount,
+        shippingFee: shippingFee,
+        totalAmount: totalAmount,
+        notes
+      } as any
     });
 
     // Tạo order items
@@ -276,7 +330,10 @@ export class PaymentService {
         // Cập nhật trạng thái đơn hàng
         await tx.order.update({
           where: { id: order.id },
-          data: { status: 'CONFIRMED' }
+          data: { 
+            status: 'CONFIRMED',
+            paymentStatus: 'PAID'
+          }
         });
 
         // Trừ số lượng kho
@@ -322,7 +379,10 @@ export class PaymentService {
       // Thanh toán thất bại
       await this.prisma.order.update({
         where: { id: order.id },
-        data: { status: 'CANCELLED' }
+        data: { 
+          status: 'CANCELLED',
+          paymentStatus: 'FAILED'
+        }
       });
 
       return {
@@ -330,7 +390,8 @@ export class PaymentService {
         message: 'Payment failed',
         data: {
           orderId: Number(order.id),
-          status: 'CANCELLED'
+          status: 'CANCELLED',
+          paymentStatus: 'FAILED'
         }
       };
     }

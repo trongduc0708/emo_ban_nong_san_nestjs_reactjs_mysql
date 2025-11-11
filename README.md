@@ -97,7 +97,7 @@ VITE_API_URL="http://localhost:3000/api"
 #### Backend (Port 3000)
 ```bash
 cd be_nextjs
-npm run dev
+npm run start:dev
 ```
 
 #### Frontend (Port 3001)

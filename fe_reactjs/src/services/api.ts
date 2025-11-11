@@ -174,6 +174,7 @@ export const paymentApi = {
     cartId: number
     paymentMethod?: 'COD' | 'VNPAY'
     notes?: string
+    couponCode?: string
   }) => api.post('/payment/process', data),
   
   // Lấy lịch sử đơn hàng
@@ -186,6 +187,7 @@ export const paymentApi = {
   createVnpayPayment: (data: {
     cartId: number
     notes?: string
+    couponCode?: string
   }) => api.post('/payment/vnpay/create', data),
 }
 

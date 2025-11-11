@@ -23,6 +23,7 @@ interface Order {
   id: number
   orderCode: string
   status: string
+  paymentStatus: string
   paymentMethod: string
   totalAmount: number
   createdAt: string
@@ -89,17 +90,49 @@ export default function OrderSuccess() {
     )
   }
 
+  // Kiểm tra trạng thái thanh toán
+  const isPaymentSuccess = order.paymentStatus === 'PAID' || 
+                          (order.paymentMethod === 'COD' && order.status !== 'CANCELLED')
+  const isPaymentPending = order.paymentStatus === 'UNPAID' && order.paymentMethod === 'VNPAY'
+  const isPaymentFailed = order.paymentStatus === 'FAILED' || order.status === 'CANCELLED'
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Success Header */}
       <div className="text-center mb-8">
-        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Đặt hàng thành công!
-        </h1>
-        <p className="text-gray-600">
-          Cảm ơn bạn đã mua sắm tại Emo Nông Sản
-        </p>
+        {isPaymentSuccess ? (
+          <>
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Đặt hàng thành công!
+            </h1>
+            <p className="text-gray-600">
+              Cảm ơn bạn đã mua sắm tại Emo Nông Sản
+            </p>
+          </>
+        ) : isPaymentPending ? (
+          <>
+            <Clock className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Đang chờ thanh toán
+            </h1>
+            <p className="text-gray-600">
+              Vui lòng hoàn tất thanh toán để đơn hàng được xử lý
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="w-16 h-16 text-red-500 mx-auto mb-4 flex items-center justify-center rounded-full bg-red-100">
+              <span className="text-2xl">✕</span>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Thanh toán thất bại
+            </h1>
+            <p className="text-gray-600">
+              Đơn hàng của bạn chưa được thanh toán thành công
+            </p>
+          </>
+        )}
       </div>
 
       {/* Order Info */}
@@ -114,8 +147,21 @@ export default function OrderSuccess() {
             <p className="font-medium">{order.orderCode}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Trạng thái</p>
+            <p className="text-sm text-gray-600">Trạng thái đơn hàng</p>
             <p className="font-medium capitalize">{order.status.toLowerCase()}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Trạng thái thanh toán</p>
+            <p className={`font-medium ${
+              order.paymentStatus === 'PAID' ? 'text-green-600' :
+              order.paymentStatus === 'UNPAID' ? 'text-yellow-600' :
+              'text-red-600'
+            }`}>
+              {order.paymentStatus === 'PAID' ? 'Đã thanh toán' :
+               order.paymentStatus === 'UNPAID' ? 'Chưa thanh toán' :
+               order.paymentStatus === 'FAILED' ? 'Thanh toán thất bại' :
+               'Không xác định'}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Phương thức thanh toán</p>
@@ -206,7 +252,9 @@ export default function OrderSuccess() {
               <p className="text-sm text-gray-600">
                 {order.paymentMethod === 'COD' 
                   ? 'Bạn sẽ thanh toán khi nhận hàng'
-                  : 'Đơn hàng đã được thanh toán, bạn chỉ cần nhận hàng'
+                  : isPaymentSuccess
+                  ? 'Đơn hàng đã được thanh toán, bạn chỉ cần nhận hàng'
+                  : 'Vui lòng hoàn tất thanh toán để đơn hàng được giao'
                 }
               </p>
             </div>

@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/RadioGroup'
 import { Label } from '@/components/ui/Label'
 import { Check, MapPin, Plus, Trash2, Edit } from 'lucide-react'
 import { formatPrice, calculateTotalPrice } from '@/utils/priceUtils'
-import { addressesApi, paymentApi } from '@/services/api'
+import { addressesApi, paymentApi, adminApi } from '@/services/api'
 import toast from 'react-hot-toast'
 
 interface Address {
@@ -36,6 +36,9 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false)
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null)
+  const [validatingCoupon, setValidatingCoupon] = useState(false)
   
   // Form data for new/edit address
   const [addressForm, setAddressForm] = useState({
@@ -49,7 +52,8 @@ export default function Checkout() {
   })
 
   const shippingFee = 20000
-  const totalAmount = totalPrice + shippingFee
+  const discountAmount = appliedCoupon?.discountAmount || 0
+  const totalAmount = totalPrice - discountAmount + shippingFee
 
   useEffect(() => {
     if (!user) {
@@ -144,6 +148,44 @@ export default function Checkout() {
     }
   }
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Vui lòng nhập mã khuyến mãi')
+      return
+    }
+
+    try {
+      setValidatingCoupon(true)
+      const response = await adminApi.validateCoupon({
+        code: couponCode.trim(),
+        userId: user?.id || 0,
+        orderAmount: totalPrice
+      })
+
+      if (response.data.success && response.data.data) {
+        setAppliedCoupon({
+          code: couponCode.trim(),
+          discountAmount: response.data.data.discountAmount
+        })
+        toast.success('Áp dụng mã khuyến mãi thành công!')
+        setCouponCode('')
+      } else {
+        toast.error(response.data.message || 'Mã khuyến mãi không hợp lệ')
+      }
+    } catch (error: any) {
+      console.error('Lỗi áp dụng mã khuyến mãi:', error)
+      toast.error(error.response?.data?.message || 'Mã khuyến mãi không hợp lệ')
+    } finally {
+      setValidatingCoupon(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponCode('')
+    toast.success('Đã xóa mã khuyến mãi')
+  }
+
   const handleCheckout = async () => {
     if (!selectedAddressId) {
       toast.error('Vui lòng chọn địa chỉ giao hàng')
@@ -165,7 +207,8 @@ export default function Checkout() {
         // VNPay payment
         const response = await paymentApi.createVnpayPayment({
           cartId,
-          notes
+          notes,
+          couponCode: appliedCoupon?.code
         })
 
         if (response.data.success) {
@@ -177,7 +220,8 @@ export default function Checkout() {
         const response = await paymentApi.processPayment({
           cartId,
           paymentMethod,
-          notes
+          notes,
+          couponCode: appliedCoupon?.code
         })
 
         if (response.data.success) {
@@ -432,6 +476,54 @@ export default function Checkout() {
             </RadioGroup>
           </Card>
 
+          {/* Coupon Code */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              Mã khuyến mãi
+            </h2>
+            
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
+                <div>
+                  <p className="text-sm text-gray-600">Mã đã áp dụng:</p>
+                  <p className="font-medium text-green-700">{appliedCoupon.code}</p>
+                  <p className="text-sm text-green-600">
+                    Giảm {formatPrice(appliedCoupon.discountAmount)}₫
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveCoupon}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  Xóa
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="Nhập mã khuyến mãi"
+                  className="flex-1"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleApplyCoupon()
+                    }
+                  }}
+                />
+                <Button
+                  onClick={handleApplyCoupon}
+                  disabled={validatingCoupon || !couponCode.trim()}
+                  variant="outline"
+                >
+                  {validatingCoupon ? 'Đang kiểm tra...' : 'Áp dụng'}
+                </Button>
+              </div>
+            )}
+          </Card>
+
           {/* Notes */}
           <Card className="p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -474,6 +566,14 @@ export default function Checkout() {
                     {formatPrice(totalPrice)}₫
                   </span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Giảm giá ({appliedCoupon.code}):</span>
+                    <span className="font-medium">
+                      -{formatPrice(discountAmount)}₫
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Phí vận chuyển:</span>
                   <span className="font-medium">
