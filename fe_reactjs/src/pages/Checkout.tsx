@@ -204,16 +204,23 @@ export default function Checkout() {
       }
 
       if (paymentMethod === 'VNPAY') {
-        // VNPay payment
+        // VNPay payment - chỉ tạo đơn hàng và redirect đến VNPay
+        // KHÔNG hiển thị thông báo thành công ở đây
+        // Kết quả thanh toán sẽ được xử lý khi VNPay callback về
         const response = await paymentApi.createVnpayPayment({
           cartId,
           notes,
           couponCode: appliedCoupon?.code
         })
 
-        if (response.data.success) {
-          // Redirect to VNPay
+        if (response.data.success && response.data.data?.paymentUrl) {
+          // Chỉ redirect đến VNPay sandbox, không có thông báo gì
+          // VNPay sẽ xử lý thanh toán và callback về backend
+          // Backend sẽ redirect đến order-success hoặc order-failed dựa trên kết quả
           window.location.href = response.data.data.paymentUrl
+          return // Dừng lại, không chạy code phía dưới
+        } else {
+          throw new Error('Không thể tạo URL thanh toán VNPay')
         }
       } else {
         // COD payment
