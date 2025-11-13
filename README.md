@@ -79,11 +79,11 @@ npx prisma db push
 ```env
 DATABASE_URL="mysql://root:password@localhost:3306/emo_nongsan"
 JWT_SECRET="your-super-secret-jwt-key-here"
-VNPAY_TMN_CODE="your-tmn-code"
-VNPAY_HASH_SECRET="your-hash-secret"
-VNPAY_URL="https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
-VNPAY_RETURN_URL="http://localhost:3000/api/payment/vnpay-return"
-VNPAY_IPN_URL="http://localhost:3000/api/payment/vnpay-ipn"
+EMO_VNPAY_TMN_CODE="your-tmn-code"
+EMO_VNPAY_HASH_SECRET="your-hash-secret"
+EMO_VNPAY_URL="https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+EMO_VNPAY_RETURN_URL="http://localhost:3000/api/payment/vnpay-return"
+EMO_VNPAY_IPN_URL="http://localhost:3000/api/payment/vnpay-ipn"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
@@ -98,6 +98,7 @@ VITE_API_URL="http://localhost:3000/api"
 ```bash
 cd be_nextjs
 npm run start:dev
+npm run start:dev:env tránh lỗi k tìm thấy biến môi trường
 ```
 
 #### Frontend (Port 3001)

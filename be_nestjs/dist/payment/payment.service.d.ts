@@ -1,10 +1,12 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
 import { VnpayService } from './vnpay.service';
+import { CouponsService } from '../coupons/coupons.service';
 export declare class PaymentService {
     private readonly prisma;
     private readonly vnpayService;
-    constructor(prisma: PrismaService, vnpayService: VnpayService);
+    private readonly couponsService;
+    constructor(prisma: PrismaService, vnpayService: VnpayService, couponsService: CouponsService);
     processPayment(userId: number, dto: ProcessPaymentDto): Promise<{
         success: boolean;
         message: string;
@@ -67,8 +69,8 @@ export declare class PaymentService {
                 userId: bigint | null;
                 paymentMethod: import(".prisma/client").$Enums.PaymentMethod;
                 notes: string | null;
-                orderCode: string;
                 status: import(".prisma/client").$Enums.OrderStatus;
+                orderCode: string;
                 paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
                 subtotalAmount: import("@prisma/client/runtime/library").Decimal;
                 discountAmount: import("@prisma/client/runtime/library").Decimal;
@@ -93,6 +95,15 @@ export declare class PaymentService {
         data: {
             orderId: number;
             status: string;
+            paymentStatus?: undefined;
+        };
+    } | {
+        success: boolean;
+        message: string;
+        data: {
+            orderId: number;
+            status: string;
+            paymentStatus: string;
         };
     }>;
 }

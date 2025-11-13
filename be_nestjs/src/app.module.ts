@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { join } from 'path';
+import { resolve } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -22,12 +22,8 @@ import { ChatbotModule } from './chatbot/chatbot.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      // Thử nhiều đường dẫn có thể cho .env file
-      envFilePath: [
-        join(process.cwd(), '.env'),
-        join(__dirname, '..', '.env'),
-        '.env'
-      ],
+      // Chỉ đọc cấu hình từ thư mục backend hiện tại
+      envFilePath: [resolve(__dirname, '..', '.env')],
       cache: true,
       expandVariables: true,
     }),

@@ -471,15 +471,17 @@ export default function Checkout() {
               Phương thức thanh toán
             </h2>
             
-            <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'COD' | 'VNPAY')}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="COD" id="cod" />
-                <Label htmlFor="cod">Thanh toán khi nhận hàng (COD)</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="VNPAY" id="vnpay" />
-                <Label htmlFor="vnpay">Thanh toán online (VNPAY)</Label>
-              </div>
+            <RadioGroup
+              value={paymentMethod}
+              onValueChange={(value) => setPaymentMethod(value as 'COD' | 'VNPAY')}
+              className="space-y-3"
+            >
+              <RadioGroupItem value="COD" id="cod">
+                <span className="text-gray-700">Thanh toán khi nhận hàng (COD)</span>
+              </RadioGroupItem>
+              <RadioGroupItem value="VNPAY" id="vnpay">
+                <span className="text-gray-700">Thanh toán online (VNPAY)</span>
+              </RadioGroupItem>
             </RadioGroup>
           </Card>
 

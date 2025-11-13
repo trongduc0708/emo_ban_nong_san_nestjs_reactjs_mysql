@@ -66,8 +66,8 @@ export declare class PaymentController {
                 userId: bigint | null;
                 paymentMethod: import(".prisma/client").$Enums.PaymentMethod;
                 notes: string | null;
-                orderCode: string;
                 status: import(".prisma/client").$Enums.OrderStatus;
+                orderCode: string;
                 paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
                 subtotalAmount: import("@prisma/client/runtime/library").Decimal;
                 discountAmount: import("@prisma/client/runtime/library").Decimal;

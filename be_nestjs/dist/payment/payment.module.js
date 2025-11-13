@@ -13,12 +13,13 @@ const payment_controller_1 = require("./payment.controller");
 const payment_service_1 = require("./payment.service");
 const vnpay_service_1 = require("./vnpay.service");
 const prisma_module_1 = require("../prisma/prisma.module");
+const coupons_module_1 = require("../coupons/coupons.module");
 let PaymentModule = class PaymentModule {
 };
 exports.PaymentModule = PaymentModule;
 exports.PaymentModule = PaymentModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, config_1.ConfigModule],
+        imports: [prisma_module_1.PrismaModule, config_1.ConfigModule, coupons_module_1.CouponsModule],
         controllers: [payment_controller_1.PaymentController],
         providers: [payment_service_1.PaymentService, vnpay_service_1.VnpayService],
         exports: [payment_service_1.PaymentService, vnpay_service_1.VnpayService],

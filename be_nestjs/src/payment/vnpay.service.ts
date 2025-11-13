@@ -1,36 +1,57 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import * as querystring from 'querystring';
 
 @Injectable()
 export class VnpayService {
+  private readonly logger = new Logger(VnpayService.name);
 
-  constructor(private configService: ConfigService) {
-    // Don't validate in constructor, validate when using
-  }
+  constructor(private configService: ConfigService) {}
 
-  private getConfig() {
-    const tmnCode = this.configService.get<string>('VNPAY_TMN_CODE') || '';
-    const hashSecret = this.configService.get<string>('VNPAY_HASH_SECRET') || '';
-    const vnpayUrl = this.configService.get<string>('VNPAY_URL') || '';
-    const returnUrl = this.configService.get<string>('VNPAY_RETURN_URL') || '';
-    const ipnUrl = this.configService.get<string>('VNPAY_IPN_URL') || '';
-    
-    console.log('🔍 VNPay Config Debug:');
-    console.log('TMN Code:', tmnCode);
-    console.log('Hash Secret:', hashSecret ? '***' : 'MISSING');
-    console.log('VNPay URL:', vnpayUrl);
-    console.log('Return URL:', returnUrl);
-    console.log('IPN URL:', ipnUrl);
-    
-    // Validate required config
-    if (!tmnCode || !hashSecret || !vnpayUrl) {
-      console.error('❌ VNPay configuration is missing!');
-      throw new Error('VNPay configuration is missing. Please check your .env file.');
+  private getConfig(): {
+    tmnCode: string
+    hashSecret: string
+    vnpayUrl: string
+    returnUrl: string
+    ipnUrl: string
+  } {
+    const config: {
+      tmnCode?: string
+      hashSecret?: string
+      vnpayUrl?: string
+      returnUrl?: string
+      ipnUrl?: string
+    } = {
+      tmnCode: this.configService.get<string>('EMO_VNPAY_TMN_CODE') || this.configService.get<string>('VNPAY_TMN_CODE'),
+      hashSecret:
+        this.configService.get<string>('EMO_VNPAY_HASH_SECRET') ||
+        this.configService.get<string>('VNPAY_HASH_SECRET'),
+      vnpayUrl: this.configService.get<string>('EMO_VNPAY_URL') || this.configService.get<string>('VNPAY_URL'),
+      returnUrl:
+        this.configService.get<string>('EMO_VNPAY_RETURN_URL') ||
+        this.configService.get<string>('VNPAY_RETURN_URL'),
+      ipnUrl:
+        this.configService.get<string>('EMO_VNPAY_IPN_URL') || this.configService.get<string>('VNPAY_IPN_URL'),
+    };
+
+    this.logger.debug(
+      `VNPay Config Loaded -> TMN:${config.tmnCode ? 'SET' : 'MISSING'}, HASH:${config.hashSecret ? 'SET' : 'MISSING'}, URL:${
+        config.vnpayUrl ? 'SET' : 'MISSING'
+      }, RETURN:${config.returnUrl ? 'SET' : 'MISSING'}, IPN:${config.ipnUrl ? 'SET' : 'MISSING'}`,
+    );
+
+    if (!config.tmnCode || !config.hashSecret || !config.vnpayUrl) {
+      throw new Error('Missing VNPay configuration. Please ensure the required environment variables are set.');
     }
-    
-    return { tmnCode, hashSecret, vnpayUrl, returnUrl, ipnUrl };
+
+    return config as {
+      tmnCode: string
+      hashSecret: string
+      vnpayUrl: string
+      returnUrl: string
+      ipnUrl: string
+    };
   }
 
   createPaymentUrl(orderId: string, amount: number, orderInfo: string, ipAddr: string): string {

@@ -473,9 +473,9 @@ CREATE TABLE `users`  (
 -- ----------------------------
 -- Records of users
 -- ----------------------------
-INSERT INTO `users` VALUES (1, 'admin@emonongsan.com', '$2b$12$eKtM7U9No1N/tx4GgA6fdOVQEGffCzqyseEhAzSGHWY9dKCeW44OK', 'Admin Emo Nông Sản', '0123456789', NULL, 'admin', 'local', NULL, NULL, '2025-10-05 22:03:31', '2025-10-13 20:33:00');
-INSERT INTO `users` VALUES (2, 'customer@example.com', '$2b$12$eKtM7U9No1N/tx4GgA6fdOVQEGffCzqyseEhAzSGHWY9dKCeW44OK', 'Khách Hàng Mẫu', '0987654321', NULL, 'customer', 'local', NULL, NULL, '2025-10-05 22:03:31', '2025-10-13 20:33:03');
-INSERT INTO `users` VALUES (3, 'hotroando@gmail.com', '$2b$12$eKtM7U9No1N/tx4GgA6fdOVQEGffCzqyseEhAzSGHWY9dKCeW44OK', 'Hỗ trợ đồ án', '0396693345', '/uploads/avatars/avatar_3_1759837640407.jpg', 'customer', 'local', NULL, NULL, '2025-10-07 08:45:51', '2025-10-07 11:47:20');
+INSERT INTO `users` VALUES (1, 'admin@emonongsan.com', '$2b$12$XhQ.Lg1fKbw7y2DbVJjjg.IRO233zNPqENkxRbl3gHt28CkohEzHW', 'Admin Emo Nông Sản', '0123456789', NULL, 'admin', 'local', NULL, NULL, '2025-10-05 22:03:31', '2025-10-13 20:33:00');
+INSERT INTO `users` VALUES (2, 'customer@example.com', '$2b$12$XhQ.Lg1fKbw7y2DbVJjjg.IRO233zNPqENkxRbl3gHt28CkohEzHW', 'Khách Hàng Mẫu', '0987654321', NULL, 'customer', 'local', NULL, NULL, '2025-10-05 22:03:31', '2025-10-13 20:33:03');
+INSERT INTO `users` VALUES (3, 'hotroando@gmail.com', '$2b$12$XhQ.Lg1fKbw7y2DbVJjjg.IRO233zNPqENkxRbl3gHt28CkohEzHW', 'Hỗ trợ đồ án', '0396693345', '/uploads/avatars/avatar_3_1759837640407.jpg', 'customer', 'local', NULL, NULL, '2025-10-07 08:45:51', '2025-10-07 11:47:20');
 
 -- ----------------------------
 -- Table structure for vnpay_transactions

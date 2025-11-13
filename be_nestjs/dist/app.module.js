@@ -25,6 +25,7 @@ const admin_module_1 = require("./admin/admin.module");
 const upload_module_1 = require("./upload/upload.module");
 const coupons_module_1 = require("./coupons/coupons.module");
 const orders_module_1 = require("./orders/orders.module");
+const chatbot_module_1 = require("./chatbot/chatbot.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -33,11 +34,7 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
-                envFilePath: [
-                    (0, path_1.join)(process.cwd(), '.env'),
-                    (0, path_1.join)(__dirname, '..', '.env'),
-                    '.env'
-                ],
+                envFilePath: [(0, path_1.resolve)(__dirname, '..', '.env')],
                 cache: true,
                 expandVariables: true,
             }),
@@ -53,7 +50,8 @@ exports.AppModule = AppModule = __decorate([
             admin_module_1.AdminModule,
             upload_module_1.UploadModule,
             coupons_module_1.CouponsModule,
-            orders_module_1.OrdersModule
+            orders_module_1.OrdersModule,
+            chatbot_module_1.ChatbotModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

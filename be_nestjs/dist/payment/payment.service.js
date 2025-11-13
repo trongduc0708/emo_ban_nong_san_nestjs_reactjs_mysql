@@ -13,15 +13,18 @@ exports.PaymentService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const vnpay_service_1 = require("./vnpay.service");
+const coupons_service_1 = require("../coupons/coupons.service");
 let PaymentService = class PaymentService {
     prisma;
     vnpayService;
-    constructor(prisma, vnpayService) {
+    couponsService;
+    constructor(prisma, vnpayService, couponsService) {
         this.prisma = prisma;
         this.vnpayService = vnpayService;
+        this.couponsService = couponsService;
     }
     async processPayment(userId, dto) {
-        const { cartId, paymentMethod = 'COD', notes } = dto;
+        const { cartId, paymentMethod = 'COD', notes, couponCode } = dto;
         const cart = await this.prisma.cart.findFirst({
             where: {
                 id: cartId,
@@ -51,16 +54,35 @@ let PaymentService = class PaymentService {
                 throw new common_1.BadRequestException(`Biến thể "${variant.variantName}" của sản phẩm "${product.name}" chỉ còn ${variant.stockQuantity} sản phẩm trong kho`);
             }
         }
+        const subtotalAmount = cart.items.reduce((sum, item) => sum + Number(item.unitPriceSnapshot) * item.quantity, 0);
+        let discountAmount = 0;
+        let couponId = null;
+        if (couponCode) {
+            try {
+                const couponValidation = await this.couponsService.validateCoupon(couponCode, userId, subtotalAmount);
+                discountAmount = couponValidation.discountAmount;
+                couponId = BigInt(couponValidation.coupon.id);
+            }
+            catch (error) {
+                throw new common_1.BadRequestException(error.message || 'Mã khuyến mãi không hợp lệ');
+            }
+        }
+        const shippingFee = 20000;
+        const totalAmount = subtotalAmount - discountAmount + shippingFee;
         return await this.prisma.$transaction(async (tx) => {
-            const totalAmount = cart.items.reduce((sum, item) => sum + Number(item.unitPriceSnapshot) * item.quantity, 0);
             const order = await tx.order.create({
                 data: {
                     orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     userId: BigInt(userId),
+                    ...(couponId && { couponId: couponId }),
                     status: 'PENDING',
                     paymentMethod: paymentMethod,
-                    notes,
-                    totalAmount: totalAmount
+                    paymentStatus: paymentMethod === 'COD' ? 'UNPAID' : 'UNPAID',
+                    subtotalAmount: subtotalAmount,
+                    discountAmount: discountAmount,
+                    shippingFee: shippingFee,
+                    totalAmount: totalAmount,
+                    notes
                 }
             });
             for (const item of cart.items) {
@@ -125,7 +147,7 @@ let PaymentService = class PaymentService {
     }
     async createVnpayPayment(userId, dto, ipAddr) {
         console.log('🔍 createVnpayPayment called with:', { userId, dto, ipAddr });
-        const { cartId, notes } = dto;
+        const { cartId, notes, couponCode } = dto;
         const cart = await this.prisma.cart.findFirst({
             where: {
                 id: cartId,
@@ -154,15 +176,34 @@ let PaymentService = class PaymentService {
                 throw new common_1.BadRequestException(`Biến thể "${variant.variantName}" chỉ còn ${variant.stockQuantity} sản phẩm trong kho`);
             }
         }
-        const totalAmount = cart.items.reduce((sum, item) => sum + Number(item.unitPriceSnapshot) * item.quantity, 0);
+        const subtotalAmount = cart.items.reduce((sum, item) => sum + Number(item.unitPriceSnapshot) * item.quantity, 0);
+        let discountAmount = 0;
+        let couponId = null;
+        if (couponCode) {
+            try {
+                const couponValidation = await this.couponsService.validateCoupon(couponCode, userId, subtotalAmount);
+                discountAmount = couponValidation.discountAmount;
+                couponId = BigInt(couponValidation.coupon.id);
+            }
+            catch (error) {
+                throw new common_1.BadRequestException(error.message || 'Mã khuyến mãi không hợp lệ');
+            }
+        }
+        const shippingFee = 20000;
+        const totalAmount = subtotalAmount - discountAmount + shippingFee;
         const order = await this.prisma.order.create({
             data: {
                 orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 userId: BigInt(userId),
+                ...(couponId && { couponId: couponId }),
                 status: 'PENDING',
                 paymentMethod: 'VNPAY',
-                notes,
-                totalAmount: totalAmount
+                paymentStatus: 'UNPAID',
+                subtotalAmount: subtotalAmount,
+                discountAmount: discountAmount,
+                shippingFee: shippingFee,
+                totalAmount: totalAmount,
+                notes
             }
         });
         for (const item of cart.items) {
@@ -220,7 +261,10 @@ let PaymentService = class PaymentService {
             await this.prisma.$transaction(async (tx) => {
                 await tx.order.update({
                     where: { id: order.id },
-                    data: { status: 'CONFIRMED' }
+                    data: {
+                        status: 'CONFIRMED',
+                        paymentStatus: 'PAID'
+                    }
                 });
                 const orderItems = await tx.orderItem.findMany({
                     where: { orderId: order.id },
@@ -259,14 +303,18 @@ let PaymentService = class PaymentService {
         else {
             await this.prisma.order.update({
                 where: { id: order.id },
-                data: { status: 'CANCELLED' }
+                data: {
+                    status: 'CANCELLED',
+                    paymentStatus: 'FAILED'
+                }
             });
             return {
                 success: false,
                 message: 'Payment failed',
                 data: {
                     orderId: Number(order.id),
-                    status: 'CANCELLED'
+                    status: 'CANCELLED',
+                    paymentStatus: 'FAILED'
                 }
             };
         }
@@ -276,6 +324,7 @@ exports.PaymentService = PaymentService;
 exports.PaymentService = PaymentService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        vnpay_service_1.VnpayService])
+        vnpay_service_1.VnpayService,
+        coupons_service_1.CouponsService])
 ], PaymentService);
 //# sourceMappingURL=payment.service.js.map
