@@ -4,14 +4,33 @@ import { EmailService } from '../common/services/email.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes } from 'crypto';
+import { ConfigService } from '@nestjs/config';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
+  private readonly googleClient: OAuth2Client | null;
+
   constructor(
     private readonly prisma: PrismaService, 
     private readonly jwt: JwtService,
-    private readonly emailService: EmailService
-  ) {}
+    private readonly emailService: EmailService,
+    private readonly configService: ConfigService
+  ) {
+    const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    this.googleClient = googleClientId ? new OAuth2Client(googleClientId) : null;
+  }
+
+  private mapSafeUser(user: any) {
+    return {
+      id: Number(user.id),
+      email: user.email,
+      fullName: user.fullName,
+      phone: user.phone,
+      avatarUrl: user.avatarUrl,
+      role: user.role,
+    };
+  }
 
   async register(dto: { email: string; password: string; fullName: string; phone?: string }) {
     const { email, password, fullName, phone } = dto;
@@ -63,6 +82,69 @@ export class AuthService {
       role: user.role,
     };
     return { success: true, token, user: safeUser };
+  }
+
+  async googleLogin(idToken: string) {
+    if (!idToken) {
+      throw new BadRequestException({ error: 'Thiếu Google ID token' });
+    }
+
+    if (!this.googleClient) {
+      throw new BadRequestException({ error: 'Google OAuth chưa được cấu hình trên server' });
+    }
+
+    let payload: any;
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+      });
+      payload = ticket.getPayload();
+    } catch (error) {
+      throw new UnauthorizedException({ error: 'Google token không hợp lệ' });
+    }
+
+    if (!payload?.email) {
+      throw new UnauthorizedException({ error: 'Không nhận được email từ Google' });
+    }
+
+    const email = payload.email.toLowerCase();
+    const fullName = payload.name || payload.given_name || email.split('@')[0];
+    const avatarUrl = payload.picture;
+    const providerId = payload.sub;
+
+    let user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          fullName,
+          avatarUrl,
+          provider: 'google',
+          providerId,
+          role: 'customer',
+        },
+      });
+    } else if (user.provider !== 'google' || !user.providerId) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          provider: 'google',
+          providerId,
+          avatarUrl: user.avatarUrl ?? avatarUrl,
+        },
+      });
+    }
+
+    const payloadJwt = { id: Number(user.id), email: user.email, role: user.role };
+    const token = await this.jwt.signAsync(payloadJwt);
+
+    return {
+      success: true,
+      token,
+      user: this.mapSafeUser(user),
+    };
   }
 
   async forgotPassword(email: string) {

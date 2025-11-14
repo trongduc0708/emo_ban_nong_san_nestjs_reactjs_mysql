@@ -23,6 +23,11 @@ export class AuthController {
     return this.authService.forgotPassword(dto.email);
   }
 
+  @Post('google')
+  async googleLogin(@Body() dto: { idToken: string }) {
+    return this.authService.googleLogin(dto.idToken);
+  }
+
   @Post('reset-password')
   async resetPassword(@Body() dto: { token: string; newPassword: string }) {
     return this.authService.resetPassword(dto.token, dto.newPassword);
