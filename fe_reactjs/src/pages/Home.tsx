@@ -7,6 +7,7 @@ import { useQuery } from 'react-query'
 import { productApi } from '@/services/api'
 import ProductSection from '@/components/ProductSection'
 import { useCart } from '@/contexts/CartContext'
+import CouponPopup from '@/components/CouponPopup'
 import toast from 'react-hot-toast'
 
 export default function Home() {
@@ -74,6 +75,9 @@ export default function Home() {
 
   return (
     <div className="space-y-16">
+      {/* Coupon Popup */}
+      <CouponPopup />
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-green-500 to-blue-600 text-white py-20">
         <div className="absolute inset-0 bg-black opacity-20"></div>

@@ -66,6 +66,62 @@ export class CouponsService {
   }
 
   /**
+   * Lấy danh sách coupons đang active (public)
+   * @returns Danh sách coupons đang active
+   */
+  async getActiveCoupons() {
+    try {
+      const now = new Date();
+      const coupons = await this.prisma.coupon.findMany({
+        where: {
+          isActive: true,
+          AND: [
+            {
+              OR: [
+                { startsAt: null },
+                { startsAt: { lte: now } }
+              ]
+            },
+            {
+              OR: [
+                { endsAt: null },
+                { endsAt: { gte: now } }
+              ]
+            }
+          ]
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      });
+
+      const processedCoupons = coupons.map(coupon => ({
+        ...coupon,
+        id: Number(coupon.id),
+        value: Number(coupon.value),
+        minOrderAmount: coupon.minOrderAmount ? Number(coupon.minOrderAmount) : null,
+        maxDiscountAmount: coupon.maxDiscountAmount ? Number(coupon.maxDiscountAmount) : null,
+        startsAt: coupon.startsAt ? coupon.startsAt.toISOString() : null,
+        endsAt: coupon.endsAt ? coupon.endsAt.toISOString() : null
+      }));
+
+      return {
+        success: true,
+        data: {
+          coupons: processedCoupons
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching active coupons:', error);
+      return {
+        success: true,
+        data: {
+          coupons: []
+        }
+      };
+    }
+  }
+
+  /**
    * Lấy thông tin chi tiết một coupon
    * @param id - ID của coupon
    * @returns Thông tin coupon

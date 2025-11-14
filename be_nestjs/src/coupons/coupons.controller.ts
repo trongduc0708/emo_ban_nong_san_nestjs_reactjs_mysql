@@ -3,15 +3,23 @@ import { CouponsService } from './coupons.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @Controller('coupons')
-@UseGuards(JwtAuthGuard)
 export class CouponsController {
   constructor(private readonly couponsService: CouponsService) {}
+
+  /**
+   * Lấy danh sách coupons đang active (public, không cần đăng nhập)
+   */
+  @Get('active')
+  async getActiveCoupons() {
+    return this.couponsService.getActiveCoupons();
+  }
 
   /**
    * Lấy danh sách coupons với phân trang và lọc
    * Query params: page, limit, search, status, type
    */
   @Get()
+  @UseGuards(JwtAuthGuard)
   async getCoupons(@Query() params: any) {
     return this.couponsService.getCoupons(params);
   }
