@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import * as querystring from 'querystring';
 
 @Injectable()
 export class VnpayService {
@@ -59,24 +58,18 @@ export class VnpayService {
     console.log('IP Address:', ipAddr);
     
     // Use Vietnam timezone (GMT+7)
-    const targetOffsetMinutes = 7 * 60; // GMT+7
     const now = new Date();
-    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
-    const vietnamTime = new Date(utcTime + targetOffsetMinutes * 60000);
-    const expireMinutes = Number(process.env.EMO_VNPAY_EXPIRE_MINUTES || 15);
+    const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const expireMinutesRaw = Number(process.env.EMO_VNPAY_EXPIRE_MINUTES || 15);
+    const expireMinutes = Number.isFinite(expireMinutesRaw) && expireMinutesRaw > 0 ? expireMinutesRaw : 15;
     const expireTime = new Date(vietnamTime.getTime() + expireMinutes * 60 * 1000);
 
-    const toVnpDate = (d: Date) => {
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      const hours = String(d.getHours()).padStart(2, '0');
-      const minutes = String(d.getMinutes()).padStart(2, '0');
-      const seconds = String(d.getSeconds()).padStart(2, '0');
-      return `${year}${month}${day}${hours}${minutes}${seconds}`;
-    };
+    const toVnpDate = (d: Date) => d.toISOString().replace(/[-:T]/g, '').replace(/\..+/, '');
     const createDate = toVnpDate(vietnamTime);
     const expireDate = toVnpDate(expireTime);
+
+    // VNPay thường yêu cầu IPv4, chuyển ::1 thành 127.0.0.1 (nếu cần)
+    const clientIp = ipAddr && ipAddr.includes(':') ? '127.0.0.1' : ipAddr || '127.0.0.1';
 
     const vnp_Params: Record<string, string> = {
       vnp_Version: '2.1.0',
@@ -85,12 +78,12 @@ export class VnpayService {
       vnp_Amount: String(Math.round(Number(amount) * 100)), // VNPay expects amount in cents
       vnp_CurrCode: 'VND',
       vnp_TxnRef: orderId,
-      // VNPay often expects OrderInfo to be URL-safe; we follow user's working impl using base64
+      // Encode OrderInfo bằng base64 như VNPay yêu cầu
       vnp_OrderInfo: Buffer.from(orderDescription, 'utf-8').toString('base64'),
       vnp_OrderType: 'other',
       vnp_Locale: 'vn',
       vnp_ReturnUrl: config.returnUrl,
-      vnp_IpAddr: ipAddr,
+      vnp_IpAddr: clientIp,
       vnp_CreateDate: createDate,
       vnp_ExpireDate: expireDate,
     };
@@ -102,9 +95,8 @@ export class VnpayService {
     console.log('🔍 Sorted Params:', sortedParams);
     
     // Create query string
-    const signData = querystring.stringify(sortedParams, undefined, undefined, {
-      encodeURIComponent: (str) => str,
-    });
+    // VNPay checksum requires URL-encoded key=value pairs joined by '&' in alphabetical order
+    const signData = this.buildSignData(vnp_Params);
     console.log('🔍 Sign Data:', signData);
     
     // Create secure hash
@@ -114,34 +106,37 @@ export class VnpayService {
       .digest('hex');
     console.log('🔍 Secure Hash:', secureHash);
 
-    const responseParams = {
-      ...sortedParams,
-      vnp_SecureHashType: 'HMACSHA512',
-      vnp_SecureHash: secureHash,
-    };
-
-    const finalUrl = `${config.vnpayUrl}?${querystring.stringify(responseParams)}`;
+    const finalUrl = `${config.vnpayUrl}?${signData}&vnp_SecureHash=${secureHash}`;
     console.log('🔍 Final VNPay URL:', finalUrl);
     
     return finalUrl;
   }
 
-  verifyReturnUrl(vnp_Params: any): { isValid: boolean; orderId?: string; amount?: number } {
+  verifyReturnUrl(vnp_Params: any): { 
+    isValid: boolean; 
+    orderId?: string; 
+    amount?: number;
+    responseCode?: string;
+    transactionNo?: string;
+    bankCode?: string;
+    payDate?: string;
+  } {
     const config = this.config;
+    
+    this.logger.log('🔐 VNPay Verify - Original params:', JSON.stringify(vnp_Params));
     
     const secureHash = vnp_Params['vnp_SecureHash'];
     delete vnp_Params['vnp_SecureHash'];
     delete vnp_Params['vnp_SecureHashType'];
 
-    const sortedParams = this.sortObject(vnp_Params);
-    const signData = querystring.stringify(sortedParams, undefined, undefined, {
-      encodeURIComponent: (str) => str,
-    });
+    const signData = this.buildSignData(vnp_Params);
+    this.logger.log('🔐 VNPay Verify - Sign data:', signData);
     
-    const checkSum = crypto
-      .createHmac('sha512', config.hashSecret)
-      .update(signData, 'utf-8')
-      .digest('hex');
+    const checkSum = crypto.createHmac('sha512', config.hashSecret).update(Buffer.from(signData, 'utf-8')).digest('hex');
+    
+    this.logger.log('🔐 VNPay Verify - Generated hash:', checkSum);
+    this.logger.log('🔐 VNPay Verify - Received hash:', secureHash);
+    this.logger.log('🔐 VNPay Verify - Hash match:', checkSum === secureHash);
 
     const isValid = secureHash === checkSum;
     
@@ -149,7 +144,11 @@ export class VnpayService {
       return {
         isValid: true,
         orderId: vnp_Params['vnp_TxnRef'],
-        amount: parseInt(vnp_Params['vnp_Amount']) / 100
+        amount: parseInt(vnp_Params['vnp_Amount'], 10) / 100,
+        responseCode: vnp_Params['vnp_ResponseCode'],
+        transactionNo: vnp_Params['vnp_TransactionNo'],
+        bankCode: vnp_Params['vnp_BankCode'],
+        payDate: vnp_Params['vnp_PayDate']
       };
     }
 
@@ -176,5 +175,34 @@ export class VnpayService {
     }
     
     return sorted;
+  }
+
+  private buildSignData(params: Record<string, string>) {
+    const sorted = this.sortObject(params);
+    return Object.entries(sorted)
+      .map(([key, val]) => `${key}=${encodeURIComponent(String(val))}`)
+      .join('&');
+  }
+
+  // Lấy danh sách ngân hàng hỗ trợ VNPay
+  getSupportedBanks() {
+    return [
+      { code: 'NCB', name: 'Ngân hàng Quốc Dân (NCB)' },
+      { code: 'VIETCOMBANK', name: 'Ngân hàng TMCP Ngoại Thương Việt Nam' },
+      { code: 'VIETINBANK', name: 'Ngân hàng TMCP Công Thương Việt Nam' },
+      { code: 'BIDV', name: 'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam' },
+      { code: 'AGRIBANK', name: 'Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam' },
+      { code: 'SACOMBANK', name: 'Ngân hàng TMCP Sài Gòn Thương Tín' },
+      { code: 'TECHCOMBANK', name: 'Ngân hàng TMCP Kỹ thương Việt Nam' },
+      { code: 'ACB', name: 'Ngân hàng TMCP Á Châu' },
+      { code: 'DONGABANK', name: 'Ngân hàng TMCP Đông Á' },
+      { code: 'EXIMBANK', name: 'Ngân hàng TMCP Xuất Nhập khẩu Việt Nam' },
+      { code: 'HDBANK', name: 'Ngân hàng TMCP Phát triển Thành phố Hồ Chí Minh' },
+      { code: 'MBBANK', name: 'Ngân hàng TMCP Quân đội' },
+      { code: 'OCB', name: 'Ngân hàng TMCP Phương Đông' },
+      { code: 'TPBANK', name: 'Ngân hàng TMCP Tiên Phong' },
+      { code: 'VIB', name: 'Ngân hàng TMCP Quốc tế Việt Nam' },
+      { code: 'VPBANK', name: 'Ngân hàng TMCP Việt Nam Thịnh Vượng' }
+    ];
   }
 }

@@ -189,6 +189,9 @@ export const paymentApi = {
     notes?: string
     couponCode?: string
   }) => api.post('/payment/vnpay/create', data),
+  
+  // Lấy danh sách ngân hàng hỗ trợ VNPay
+  getSupportedBanks: () => api.get('/payment/vnpay/supported-banks'),
 }
 
 // API cho Admin
@@ -256,13 +259,6 @@ export const adminApi = {
   updateCoupon: (id: number, data: any) => api.put(`/coupons/${id}`, data),
   deleteCoupon: (id: number) => api.delete(`/coupons/${id}`),
   validateCoupon: (data: any) => api.post('/coupons/validate', data),
-
-  // Orders Management
-  getOrders: (params?: any) => api.get('/orders', { params }),
-  getOrder: (id: number) => api.get(`/orders/${id}`),
-  updateOrderStatus: (id: number, status: string) => api.put(`/orders/${id}/status`, { status }),
-  updateOrderPaymentStatus: (id: number, paymentStatus: string) => api.put(`/orders/${id}/payment-status`, { paymentStatus }),
-  getOrderStats: () => api.get('/orders/stats/overview'),
 }
 
 // API cho Addresses

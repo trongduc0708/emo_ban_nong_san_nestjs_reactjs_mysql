@@ -19,6 +19,7 @@ import Orders from '@/pages/Orders'
 import OrderDetail from '@/pages/OrderDetail'
 import OrderSuccess from '@/pages/OrderSuccess'
 import OrderFailed from '@/pages/OrderFailed'
+import VNPayReturnPage from '@/pages/VNPayReturnPage'
 import Wishlist from '@/pages/Wishlist'
 import AdminDashboard from '@/pages/admin/Dashboard'
 import AdminProducts from '@/pages/admin/Products'
@@ -138,6 +139,7 @@ function App() {
                         </ProtectedRoute>
                       } />
                       <Route path="/order-failed" element={<OrderFailed />} />
+                      <Route path="/payment/vnpay/return" element={<VNPayReturnPage />} />
                     </Routes>
                   </Layout>
                 </AdminRedirect>

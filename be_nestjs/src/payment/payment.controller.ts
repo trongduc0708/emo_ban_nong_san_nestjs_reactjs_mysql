@@ -29,7 +29,12 @@ export class PaymentController {
   @Post('vnpay/create')
   async createVnpayPayment(@Req() req: any, @Body() dto: ProcessPaymentDto) {
     const userId = Number(req.user?.id);
-    const ipAddr = req.ip || req.connection.remoteAddress || '127.0.0.1';
+    // Lấy IP address từ request headers hoặc connection
+    const ipAddr = req.headers['x-forwarded-for']?.split(',')[0] || 
+                   req.headers['x-real-ip'] || 
+                   req.ip || 
+                   req.connection?.remoteAddress || 
+                   '127.0.0.1';
     return this.paymentService.createVnpayPayment(userId, dto, ipAddr);
   }
 
@@ -39,20 +44,42 @@ export class PaymentController {
     try {
       const result = await this.paymentService.handleVnpayReturn(query);
       
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      
       if (result.success) {
-        // Redirect to success page
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-        res.redirect(`${frontendUrl}/order-success/${result.data.orderId}`);
+        // Redirect to success page với query params để frontend có thể xử lý
+        const redirectUrl = new URL(`${frontendUrl}/payment/vnpay/return`);
+        redirectUrl.searchParams.set('vnp_ResponseCode', query.vnp_ResponseCode || '00');
+        redirectUrl.searchParams.set('vnp_TxnRef', query.vnp_TxnRef || '');
+        redirectUrl.searchParams.set('vnp_Amount', query.vnp_Amount || '');
+        redirectUrl.searchParams.set('vnp_TransactionNo', query.vnp_TransactionNo || '');
+        redirectUrl.searchParams.set('vnp_SecureHash', query.vnp_SecureHash || '');
+        res.redirect(redirectUrl.toString());
       } else {
-        // Redirect to error page
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-        res.redirect(`${frontendUrl}/order-failed`);
+        // Redirect to error page với query params
+        const redirectUrl = new URL(`${frontendUrl}/payment/vnpay/return`);
+        redirectUrl.searchParams.set('vnp_ResponseCode', query.vnp_ResponseCode || '99');
+        redirectUrl.searchParams.set('vnp_TxnRef', query.vnp_TxnRef || '');
+        redirectUrl.searchParams.set('vnp_Amount', query.vnp_Amount || '');
+        res.redirect(redirectUrl.toString());
       }
     } catch (error) {
       console.error('VNPay return error:', error);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-      res.redirect(`${frontendUrl}/order-failed`);
+      const redirectUrl = new URL(`${frontendUrl}/payment/vnpay/return`);
+      redirectUrl.searchParams.set('vnp_ResponseCode', '99');
+      res.redirect(redirectUrl.toString());
     }
+  }
+
+  // Lấy danh sách ngân hàng hỗ trợ VNPay
+  @Get('vnpay/supported-banks')
+  async getSupportedBanks() {
+    const banks = this.paymentService.getSupportedBanks();
+    return {
+      success: true,
+      data: banks
+    };
   }
 
   // VNPay IPN (Instant Payment Notification)

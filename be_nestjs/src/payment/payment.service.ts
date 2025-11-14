@@ -372,7 +372,13 @@ export class PaymentService {
         message: 'Payment successful',
         data: {
           orderId: Number(order.id),
-          status: 'CONFIRMED'
+          orderCode: order.orderCode,
+          status: 'CONFIRMED',
+          paymentStatus: 'PAID',
+          amount: verification.amount,
+          transactionNo: verification.transactionNo,
+          bankCode: verification.bankCode,
+          payDate: verification.payDate
         }
       };
     } else {
@@ -391,9 +397,14 @@ export class PaymentService {
         data: {
           orderId: Number(order.id),
           status: 'CANCELLED',
-          paymentStatus: 'FAILED'
+          paymentStatus: 'FAILED',
+          responseCode: verification.responseCode
         }
       };
     }
+  }
+
+  getSupportedBanks() {
+    return this.vnpayService.getSupportedBanks();
   }
 }
