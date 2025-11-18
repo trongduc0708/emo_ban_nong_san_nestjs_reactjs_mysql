@@ -359,6 +359,7 @@ model Setting {
 enum UserRole {
   customer
   admin
+  seller
 }
 
 enum AuthProvider {

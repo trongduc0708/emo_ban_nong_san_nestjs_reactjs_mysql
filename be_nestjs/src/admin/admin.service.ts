@@ -547,7 +547,7 @@ export class AdminService {
         data: {
           ...data,
           // Đảm bảo role là một trong các giá trị hợp lệ
-          role: data.role && ['customer', 'admin'].includes(data.role) ? data.role : undefined
+          role: data.role && ['customer', 'admin', 'seller'].includes(data.role) ? data.role : undefined
         },
         select: {
           id: true,

@@ -26,62 +26,83 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, logout } = useAuth()
   const location = useLocation()
 
-  const menuItems = [
+  // Menu items cho admin (tất cả)
+  const allMenuItems = [
     {
       name: 'Dashboard',
       href: '/admin',
       icon: LayoutDashboard,
-      current: location.pathname === '/admin'
+      current: location.pathname === '/admin',
+      roles: ['admin', 'seller'] as ('admin' | 'seller')[]
     },
     {
       name: 'Sản phẩm',
       href: '/admin/products',
       icon: Package,
-      current: location.pathname.startsWith('/admin/products')
+      current: location.pathname.startsWith('/admin/products'),
+      roles: ['admin'] as ('admin' | 'seller')[]
     },
     {
       name: 'Danh mục',
       href: '/admin/categories',
       icon: Folder,
-      current: location.pathname.startsWith('/admin/categories')
+      current: location.pathname.startsWith('/admin/categories'),
+      roles: ['admin'] as ('admin' | 'seller')[]
     },
     {
       name: 'Mã giảm giá',
       href: '/admin/coupons',
       icon: Tag,
-      current: location.pathname.startsWith('/admin/coupons')
+      current: location.pathname.startsWith('/admin/coupons'),
+      roles: ['admin'] as ('admin' | 'seller')[]
     },
     {
       name: 'Đơn hàng',
       href: '/admin/orders',
       icon: ShoppingCart,
-      current: location.pathname.startsWith('/admin/orders')
+      current: location.pathname.startsWith('/admin/orders'),
+      roles: ['admin', 'seller'] as ('admin' | 'seller')[]
     },
     {
       name: 'Khách hàng',
       href: '/admin/users',
       icon: Users,
-      current: location.pathname.startsWith('/admin/users')
+      current: location.pathname.startsWith('/admin/users'),
+      roles: ['admin'] as ('admin' | 'seller')[]
     },
     {
       name: 'Đánh giá',
       href: '/admin/reviews',
       icon: Star,
-      current: location.pathname.startsWith('/admin/reviews')
+      current: location.pathname.startsWith('/admin/reviews'),
+      roles: ['admin'] as ('admin' | 'seller')[]
     },
     {
       name: 'Báo cáo',
       href: '/admin/reports',
       icon: BarChart3,
-      current: location.pathname.startsWith('/admin/reports')
+      current: location.pathname.startsWith('/admin/reports'),
+      roles: ['admin'] as ('admin' | 'seller')[]
     },
     {
       name: 'Cài đặt',
       href: '/admin/settings',
       icon: Settings,
-      current: location.pathname.startsWith('/admin/settings')
+      current: location.pathname.startsWith('/admin/settings'),
+      roles: ['admin'] as ('admin' | 'seller')[]
     }
   ]
+
+  // Lọc menu items dựa trên role của user
+  const menuItems = allMenuItems.filter(item => 
+    user?.role && item.roles.includes(user.role as 'admin' | 'seller')
+  )
+
+  const getRoleText = () => {
+    if (user?.role === 'admin') return 'Quản trị viên'
+    if (user?.role === 'seller') return 'Người bán'
+    return 'Admin'
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,7 +112,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-xl font-bold text-gray-900">Emo Nông Sản - Admin</h1>
+                <h1 className="text-xl font-bold text-gray-900">
+                  Emo Nông Sản - {user?.role === 'seller' ? 'Người bán' : 'Admin'}
+                </h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -101,7 +124,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </div>
                 <div className="hidden sm:block">
                   <p className="text-sm font-medium text-gray-900">{user?.fullName}</p>
-                  <p className="text-xs text-gray-500">Admin</p>
+                  <p className="text-xs text-gray-500">{getRoleText()}</p>
                 </div>
               </div>
               <button

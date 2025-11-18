@@ -11,8 +11,8 @@ export default function AdminRedirect({ children }: AdminRedirectProps) {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Chỉ redirect nếu user đã load xong và là admin
-    if (!loading && user && user.role === 'admin') {
+    // Chỉ redirect nếu user đã load xong và là admin hoặc seller
+    if (!loading && user && (user.role === 'admin' || user.role === 'seller')) {
       // Kiểm tra nếu đang ở trang chủ hoặc các trang khách hàng
       const currentPath = window.location.pathname
       const adminPaths = ['/admin', '/admin/']

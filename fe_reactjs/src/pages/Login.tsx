@@ -95,6 +95,8 @@ export default function Login() {
       }
 
       const google = (window as any).google
+      console.log('Google client ID đang dùng:', import.meta.env.VITE_GOOGLE_CLIENT_ID)
+
       google.accounts.id.initialize({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         ux_mode: 'popup',
@@ -107,7 +109,7 @@ export default function Login() {
             localStorage.setItem('user', JSON.stringify(result.data.user))
             
             // Xác định redirect path dựa trên role
-            const redirectTo = result.data.user.role === 'admin' ? '/admin' : '/'
+            const redirectTo = (result.data.user.role === 'admin' || result.data.user.role === 'seller') ? '/admin' : '/'
             
             toast.success('Đăng nhập Google thành công!')
             navigate(redirectTo)

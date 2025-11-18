@@ -39,29 +39,32 @@ function App() {
     <AuthProvider>
       <Routes>
         {/* Admin Routes - Layout riêng biệt */}
+        {/* Dashboard - Admin và Seller đều truy cập được */}
         <Route path="/admin" element={
-          <ProtectedRoute requireAdmin>
+          <ProtectedRoute requireAdminOrSeller>
             <AdminDashboard />
           </ProtectedRoute>
         } />
-               <Route path="/admin/products" element={
-                 <ProtectedRoute requireAdmin>
-                   <AdminProducts />
-                 </ProtectedRoute>
-               } />
-               <Route path="/admin/categories" element={
-                 <ProtectedRoute requireAdmin>
-                   <AdminCategories />
-                 </ProtectedRoute>
-               } />
-               <Route path="/admin/coupons" element={
-                 <ProtectedRoute requireAdmin>
-                   <AdminCoupons />
-                 </ProtectedRoute>
-               } />
+        {/* Orders - Admin và Seller đều truy cập được */}
         <Route path="/admin/orders" element={
-          <ProtectedRoute requireAdmin>
+          <ProtectedRoute requireAdminOrSeller>
             <AdminOrders />
+          </ProtectedRoute>
+        } />
+        {/* Các route chỉ dành cho Admin */}
+        <Route path="/admin/products" element={
+          <ProtectedRoute requireAdmin>
+            <AdminProducts />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/categories" element={
+          <ProtectedRoute requireAdmin>
+            <AdminCategories />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/coupons" element={
+          <ProtectedRoute requireAdmin>
+            <AdminCoupons />
           </ProtectedRoute>
         } />
         <Route path="/admin/users" element={

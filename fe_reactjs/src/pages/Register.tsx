@@ -89,7 +89,7 @@ export default function Register() {
             localStorage.setItem('user', JSON.stringify(result.data.user))
             
             // Xác định redirect path dựa trên role
-            const redirectTo = result.data.user.role === 'admin' ? '/admin' : '/'
+            const redirectTo = (result.data.user.role === 'admin' || result.data.user.role === 'seller') ? '/admin' : '/'
             
             toast.success('Đăng ký Google thành công!')
             navigate(redirectTo)

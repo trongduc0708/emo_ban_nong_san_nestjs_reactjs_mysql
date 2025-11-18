@@ -8,7 +8,7 @@ interface User {
   fullName: string
   phone?: string
   avatarUrl?: string
-  role: 'customer' | 'admin'
+  role: 'customer' | 'admin' | 'seller'
 }
 
 // Interface cho AuthContext
@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('user', JSON.stringify(userData))
       
       // Xác định redirect path dựa trên role
-      const redirectTo = userData.role === 'admin' ? '/admin' : '/'
+      const redirectTo = (userData.role === 'admin' || userData.role === 'seller') ? '/admin' : '/'
       
       return { redirectTo }
     } catch (error) {
@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('user', JSON.stringify(newUser))
       
       // Xác định redirect path dựa trên role
-      const redirectTo = newUser.role === 'admin' ? '/admin' : '/'
+      const redirectTo = (newUser.role === 'admin' || newUser.role === 'seller') ? '/admin' : '/'
       
       return { redirectTo }
     } catch (error) {

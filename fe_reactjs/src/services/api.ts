@@ -214,7 +214,7 @@ export const adminApi = {
   getUsers: (params?: any) => api.get('/admin/users', { params }),
   getUser: (id: number) => api.get(`/admin/users/${id}`),
   updateUser: (id: number, data: any) => api.put(`/admin/users/${id}`, data),
-  updateUserRole: (id: number, role: 'customer' | 'admin') => api.put(`/admin/users/${id}/role`, { role }),
+  updateUserRole: (id: number, role: 'customer' | 'admin' | 'seller') => api.put(`/admin/users/${id}/role`, { role }),
   
   // Categories Management
   getCategories: () => api.get('/admin/categories'),

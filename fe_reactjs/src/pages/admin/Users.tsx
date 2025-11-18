@@ -25,7 +25,7 @@ interface User {
   fullName: string
   email: string
   phone: string | null
-  role: 'customer' | 'admin'
+  role: 'customer' | 'admin' | 'seller'
   avatarUrl: string | null
   createdAt: string
   ordersCount: number
@@ -39,7 +39,7 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showRoleModal, setShowRoleModal] = useState(false)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [pendingRole, setPendingRole] = useState<'customer' | 'admin' | null>(null)
+  const [pendingRole, setPendingRole] = useState<'customer' | 'admin' | 'seller' | null>(null)
   const queryClient = useQueryClient()
   const limit = 10
 
@@ -60,7 +60,7 @@ export default function AdminUsers() {
 
   // Update user role mutation
   const updateRoleMutation = useMutation(
-    ({ id, role }: { id: number; role: 'customer' | 'admin' }) => 
+    ({ id, role }: { id: number; role: 'customer' | 'admin' | 'seller' }) => 
       adminApi.updateUserRole(id, role),
     {
       onSuccess: () => {
@@ -80,7 +80,7 @@ export default function AdminUsers() {
     setShowRoleModal(true)
   }
 
-  const handleConfirmRoleChange = (newRole: 'customer' | 'admin') => {
+  const handleConfirmRoleChange = (newRole: 'customer' | 'admin' | 'seller') => {
     if (!selectedUser) return
     setPendingRole(newRole)
     setShowConfirmDialog(true)
@@ -99,6 +99,8 @@ export default function AdminUsers() {
         return 'text-purple-600 bg-purple-100'
       case 'customer':
         return 'text-blue-600 bg-blue-100'
+      case 'seller':
+        return 'text-green-600 bg-green-100'
       default:
         return 'text-gray-600 bg-gray-100'
     }
@@ -110,6 +112,8 @@ export default function AdminUsers() {
         return 'Quản trị viên'
       case 'customer':
         return 'Khách hàng'
+      case 'seller':
+        return 'Người bán'
       default:
         return role
     }
@@ -130,6 +134,7 @@ export default function AdminUsers() {
     total: pagination.total,
     customers: users.filter((u: User) => u.role === 'customer').length,
     admins: users.filter((u: User) => u.role === 'admin').length,
+    sellers: users.filter((u: User) => u.role === 'seller').length,
     totalRevenue: users.reduce((sum: number, u: User) => sum + u.totalSpent, 0)
   }
 
@@ -189,6 +194,18 @@ export default function AdminUsers() {
           <Card className="p-6">
             <div className="flex items-center justify-between">
               <div>
+                <p className="text-sm font-medium text-gray-600">Người bán</p>
+                <p className="text-2xl font-bold text-green-600">{stats.sellers}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <UserCheck className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(stats.totalRevenue)}
@@ -231,6 +248,7 @@ export default function AdminUsers() {
                 <option value="all">Tất cả vai trò</option>
                 <option value="customer">Khách hàng</option>
                 <option value="admin">Quản trị viên</option>
+                <option value="seller">Người bán</option>
               </select>
             </div>
           </div>
@@ -426,6 +444,15 @@ export default function AdminUsers() {
                         <User className="w-4 h-4 mr-2" />
                         Khách hàng
                       </Button>
+                      <Button
+                        variant={selectedUser.role === 'seller' ? 'primary' : 'outline'}
+                        className="w-full"
+                        onClick={() => handleConfirmRoleChange('seller')}
+                        disabled={updateRoleMutation.isLoading || selectedUser.role === 'seller'}
+                      >
+                        <UserCheck className="w-4 h-4 mr-2" />
+                        Người bán
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -451,7 +478,7 @@ export default function AdminUsers() {
           isOpen={showConfirmDialog}
           title="Xác nhận đổi vai trò"
           message={selectedUser && pendingRole 
-            ? `Bạn có chắc muốn đổi vai trò của ${selectedUser.fullName} thành ${pendingRole === 'admin' ? 'Quản trị viên' : 'Khách hàng'}?`
+            ? `Bạn có chắc muốn đổi vai trò của ${selectedUser.fullName} thành ${pendingRole === 'admin' ? 'Quản trị viên' : pendingRole === 'seller' ? 'Người bán' : 'Khách hàng'}?`
             : 'Bạn có chắc muốn đổi vai trò này?'}
           confirmText="Xác nhận"
           cancelText="Hủy"

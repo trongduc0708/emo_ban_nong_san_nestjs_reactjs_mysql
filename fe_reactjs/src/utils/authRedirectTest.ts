@@ -15,6 +15,12 @@ export const testAuthRedirect = () => {
       userRole: 'admin', 
       expectedRedirect: '/admin',
       description: 'Admin đăng nhập sẽ được redirect về trang admin'
+    },
+    {
+      name: 'Seller login should redirect to seller dashboard',
+      userRole: 'seller',
+      expectedRedirect: '/seller',
+      description: 'Người bán đăng nhập sẽ được redirect về trang seller'
     }
   ]
   
@@ -25,7 +31,7 @@ export const testAuthRedirect = () => {
     console.log(`   Description: ${testCase.description}`)
     
     // Simulate the logic
-    const redirectTo = testCase.userRole === 'admin' ? '/admin' : '/'
+    const redirectTo = testCase.userRole === 'admin' ? '/admin' : testCase.userRole === 'seller' ? '/seller' : '/'
     const isCorrect = redirectTo === testCase.expectedRedirect
     
     console.log(`   ✅ Result: ${redirectTo}`)
@@ -36,15 +42,15 @@ export const testAuthRedirect = () => {
 }
 
 // Function để test redirect logic trong component
-export const simulateLoginRedirect = (userRole: 'customer' | 'admin') => {
-  const redirectTo = userRole === 'admin' ? '/admin' : '/'
+export const simulateLoginRedirect = (userRole: 'customer' | 'admin' | 'seller') => {
+  const redirectTo = userRole === 'admin' ? '/admin' : userRole === 'seller' ? '/seller' : '/'
   console.log(`🔄 Simulating login redirect for role: ${userRole}`)
   console.log(`📍 Redirecting to: ${redirectTo}`)
   return redirectTo
 }
 
 // Function để test admin redirect logic
-export const simulateAdminRedirect = (currentPath: string, userRole: 'customer' | 'admin') => {
+export const simulateAdminRedirect = (currentPath: string, userRole: 'customer' | 'admin' | 'seller') => {
   if (userRole !== 'admin') {
     console.log(`👤 User is not admin, no redirect needed`)
     return false
