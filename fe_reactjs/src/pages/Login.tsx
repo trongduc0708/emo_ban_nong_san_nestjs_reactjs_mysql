@@ -78,53 +78,19 @@ export default function Login() {
     }
   }
 
-  // Xử lý đăng nhập Google (dùng ID token - Google Identity Services)
+  // Xử lý đăng nhập Google (OAuth redirect flow)
   const handleGoogleLogin = async () => {
     try {
       setIsGoogleLoading(true)
-
-      // Nạp SDK Google nếu chưa có
-      if (!(window as any).google) {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement('script')
-          s.src = 'https://accounts.google.com/gsi/client'
-          s.onload = resolve
-          s.onerror = () => reject(new Error('Failed to load Google API'))
-          document.head.appendChild(s)
-        })
-      }
-
-      const google = (window as any).google
-      console.log('Google client ID đang dùng:', import.meta.env.VITE_GOOGLE_CLIENT_ID)
-
-      google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        ux_mode: 'popup',
-        use_fedcm_for_prompt: false,
-        callback: async ({ credential }: { credential: string }) => {
-          try {
-            // Gửi ID token (credential) tới backend
-            const result = await authApi.googleLogin(credential)
-            localStorage.setItem('token', result.data.token)
-            localStorage.setItem('user', JSON.stringify(result.data.user))
-            
-            // Xác định redirect path dựa trên role
-            const redirectTo = (result.data.user.role === 'admin' || result.data.user.role === 'seller') ? '/admin' : '/'
-            
-            toast.success('Đăng nhập Google thành công!')
-            navigate(redirectTo)
-          } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Đăng nhập Google thất bại')
-          } finally {
-            setIsGoogleLoading(false)
-          }
-        }
-      })
-
-      // Hiển thị chọn tài khoản
-      google.accounts.id.prompt()
-    } catch (error) {
-      toast.error('Lỗi khởi tạo Google Sign-In')
+      
+      // Lấy Google OAuth URL từ backend
+      const response = await authApi.getGoogleAuthUrl()
+      const googleAuthUrl = response.data.url
+      
+      // Redirect đến Google OAuth
+      window.location.href = googleAuthUrl
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Lỗi khởi tạo Google Sign-In')
       setIsGoogleLoading(false)
     }
   }

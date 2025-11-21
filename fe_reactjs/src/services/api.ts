@@ -61,6 +61,9 @@ export const authApi = {
   googleLogin: (idToken: string) =>
     api.post('/auth/google', { idToken }),
   
+  // Lấy Google OAuth URL
+  getGoogleAuthUrl: () => api.get('/auth/google'),
+  
   // Quên mật khẩu
   forgotPassword: (email: string) =>
     api.post('/auth/forgot-password', { email }),

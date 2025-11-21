@@ -33,6 +33,7 @@ import AdminReports from '@/pages/admin/Reports'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import About from '@/pages/About'
 import Policy from '@/pages/Policy'
+import GoogleCallback from '@/pages/GoogleCallback'
 
 function App() {
   return (
@@ -109,6 +110,7 @@ function App() {
                       <Route path="/register" element={<Register />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />
                       <Route path="/reset-password" element={<ResetPassword />} />
+                      <Route path="/auth/google/callback" element={<GoogleCallback />} />
                       
                       {/* Trang cần đăng nhập */}
                       <Route path="/checkout" element={

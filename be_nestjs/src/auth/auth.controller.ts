@@ -1,4 +1,5 @@
-import { Body, Controller, Post, Get, Query, Put, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Post, Get, Query, Put, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
@@ -26,6 +27,55 @@ export class AuthController {
   @Post('google')
   async googleLogin(@Body() dto: { idToken: string }) {
     return this.authService.googleLogin(dto.idToken);
+  }
+
+  @Get('google')
+  async googleAuth() {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    // Redirect URI phải là backend URL, không phải frontend
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${backendUrl}/api/auth/google/callback`;
+    const scope = 'openid email profile';
+    const responseType = 'code';
+    
+    if (!clientId) {
+      throw new BadRequestException('Google Client ID chưa được cấu hình');
+    }
+    
+    // Log để debug
+    console.log('=== Google OAuth Debug ===');
+    console.log('Client ID:', clientId);
+    console.log('Redirect URI:', redirectUri);
+    console.log('Backend URL:', backendUrl);
+    console.log('========================');
+    
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}&access_type=online&prompt=select_account`;
+    
+    return { url: googleAuthUrl };
+  }
+
+  @Get('google/callback')
+  async googleCallback(@Query('code') code: string, @Query('error') error: string, @Res() res: Response) {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    
+    if (error) {
+      // Redirect to frontend with error
+      return res.redirect(`${frontendUrl}/auth/google/callback?error=${encodeURIComponent(error)}`);
+    }
+    
+    if (!code) {
+      // Redirect to frontend with error
+      return res.redirect(`${frontendUrl}/auth/google/callback?error=${encodeURIComponent('No authorization code received')}`);
+    }
+    
+    try {
+      const result = await this.authService.googleCallback(code);
+      // Redirect to frontend with token
+      return res.redirect(result.redirectUrl);
+    } catch (err: any) {
+      // Redirect to frontend with error
+      return res.redirect(`${frontendUrl}/auth/google/callback?error=${encodeURIComponent(err.message || 'Authentication failed')}`);
+    }
   }
 
   @Post('reset-password')

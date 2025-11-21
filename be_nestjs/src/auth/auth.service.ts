@@ -18,7 +18,21 @@ export class AuthService {
     private readonly configService: ConfigService
   ) {
     const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    this.googleClient = googleClientId ? new OAuth2Client(googleClientId) : null;
+    const googleClientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET');
+    // Redirect URI phải là backend URL
+    const backendUrl = this.configService.get<string>('BACKEND_URL') || 'http://localhost:3000';
+    const redirectUri = this.configService.get<string>('GOOGLE_REDIRECT_URI') || 
+      `${backendUrl}/api/auth/google/callback`;
+    
+    if (googleClientId) {
+      this.googleClient = new OAuth2Client({
+        clientId: googleClientId,
+        clientSecret: googleClientSecret,
+        redirectUri,
+      });
+    } else {
+      this.googleClient = null;
+    }
   }
 
   private mapSafeUser(user: any) {
@@ -145,6 +159,83 @@ export class AuthService {
       token,
       user: this.mapSafeUser(user),
     };
+  }
+
+  async googleCallback(code: string) {
+    if (!this.googleClient) {
+      throw new BadRequestException({ error: 'Google OAuth chưa được cấu hình trên server' });
+    }
+
+    let tokens: any;
+    try {
+      // Exchange authorization code for tokens
+      const { tokens: tokenData } = await this.googleClient.getToken(code);
+      tokens = tokenData;
+    } catch (error) {
+      throw new UnauthorizedException({ error: 'Không thể lấy token từ Google' });
+    }
+
+    if (!tokens.id_token) {
+      throw new UnauthorizedException({ error: 'Không nhận được ID token từ Google' });
+    }
+
+    // Verify ID token
+    let payload: any;
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+      });
+      payload = ticket.getPayload();
+    } catch (error) {
+      throw new UnauthorizedException({ error: 'Google token không hợp lệ' });
+    }
+
+    if (!payload?.email) {
+      throw new UnauthorizedException({ error: 'Không nhận được email từ Google' });
+    }
+
+    const email = payload.email.toLowerCase();
+    const fullName = payload.name || payload.given_name || email.split('@')[0];
+    const avatarUrl = payload.picture;
+    const providerId = payload.sub;
+
+    let user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          fullName,
+          avatarUrl,
+          provider: 'google',
+          providerId,
+          role: 'customer',
+        },
+      });
+    } else if (user.provider !== 'google' || !user.providerId) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          provider: 'google',
+          providerId,
+          avatarUrl: user.avatarUrl ?? avatarUrl,
+        },
+      });
+    }
+
+    const payloadJwt = { id: Number(user.id), email: user.email, role: user.role };
+    const token = await this.jwt.signAsync(payloadJwt);
+
+    const safeUser = this.mapSafeUser(user);
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    const userRole = user.role as 'admin' | 'seller' | 'customer';
+    const redirectTo = (userRole === 'admin' || userRole === 'seller') ? '/admin' : '/';
+    
+    // Redirect to frontend with token in URL
+    const redirectUrl = `${frontendUrl}/auth/google/callback?token=${token}&user=${encodeURIComponent(JSON.stringify(safeUser))}&redirect=${encodeURIComponent(redirectTo)}`;
+    
+    return { redirectUrl };
   }
 
   async forgotPassword(email: string) {
