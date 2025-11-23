@@ -32,6 +32,7 @@ model User {
   orders            Order[]
   reviews           Review[]
   passwordResetTokens PasswordResetToken[]
+  products          Product[]            @relation("SellerProducts")
 
   @@map("users")
   @@index([email])
@@ -92,6 +93,7 @@ model Category {
 model Product {
   id          BigInt   @id @default(autoincrement())
   categoryId  BigInt?  @map("category_id")
+  sellerId    BigInt?  @map("seller_id")
   name        String   @db.VarChar(191)
   slug        String   @unique @db.VarChar(191)
   sku         String?  @db.VarChar(64)
@@ -103,6 +105,7 @@ model Product {
 
   // Relations
   category       Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  seller         User?             @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: SetNull)
   images         ProductImage[]
   variants       ProductVariant[]
   cartItems      CartItem[]
@@ -112,6 +115,7 @@ model Product {
 
   @@map("products")
   @@index([categoryId])
+  @@index([sellerId])
 }
 
 model ProductImage {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Req } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -22,52 +22,52 @@ export class AdminController {
   /**
    * Lấy danh sách sản phẩm với phân trang và lọc
    * Query params: page, limit, search, category, status
-   * Chỉ dành cho admin
+   * Cho phép admin và seller (seller chỉ thấy sản phẩm của mình)
    */
   @Get('products')
-  @Roles('admin')
-  async getProducts(@Query() params: any) {
-    return this.adminService.getProducts(params);
+  @Roles('admin', 'seller')
+  async getProducts(@Query() params: any, @Req() req: any) {
+    return this.adminService.getProducts(params, req.user);
   }
 
   /**
    * Lấy thông tin chi tiết một sản phẩm
-   * Chỉ dành cho admin
+   * Cho phép admin và seller (seller chỉ thấy sản phẩm của mình)
    */
   @Get('products/:id')
-  @Roles('admin')
-  async getProduct(@Param('id') id: string) {
-    return this.adminService.getProduct(parseInt(id));
+  @Roles('admin', 'seller')
+  async getProduct(@Param('id') id: string, @Req() req: any) {
+    return this.adminService.getProduct(parseInt(id), req.user);
   }
 
   /**
    * Tạo sản phẩm mới
-   * Chỉ dành cho admin
+   * Cho phép admin và seller (seller chỉ tạo sản phẩm cho mình)
    */
   @Post('products')
-  @Roles('admin')
-  async createProduct(@Body() data: any) {
-    return this.adminService.createProduct(data);
+  @Roles('admin', 'seller')
+  async createProduct(@Body() data: any, @Req() req: any) {
+    return this.adminService.createProduct(data, req.user);
   }
 
   /**
    * Cập nhật sản phẩm
-   * Chỉ dành cho admin
+   * Cho phép admin và seller (seller chỉ sửa sản phẩm của mình)
    */
   @Put('products/:id')
-  @Roles('admin')
-  async updateProduct(@Param('id') id: string, @Body() data: any) {
-    return this.adminService.updateProduct(parseInt(id), data);
+  @Roles('admin', 'seller')
+  async updateProduct(@Param('id') id: string, @Body() data: any, @Req() req: any) {
+    return this.adminService.updateProduct(parseInt(id), data, req.user);
   }
 
   /**
    * Xóa sản phẩm
-   * Chỉ dành cho admin
+   * Cho phép admin và seller (seller chỉ xóa sản phẩm của mình)
    */
   @Delete('products/:id')
-  @Roles('admin')
-  async deleteProduct(@Param('id') id: string) {
-    return this.adminService.deleteProduct(parseInt(id));
+  @Roles('admin', 'seller')
+  async deleteProduct(@Param('id') id: string, @Req() req: any) {
+    return this.adminService.deleteProduct(parseInt(id), req.user);
   }
 
   // Orders Management

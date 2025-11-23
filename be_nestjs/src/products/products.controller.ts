@@ -1,12 +1,18 @@
-import { Controller, Get, Param, Query, Post, UseInterceptors, UploadedFile, UseGuards, Req, Body } from '@nestjs/common';
+import { Controller, Get, Param, Query, Post, Put, UseInterceptors, UploadedFile, UseGuards, Req, Body } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { multerConfig } from '../config/multer.config';
+import { AdminService } from '../admin/admin.service';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly adminService: AdminService
+  ) {}
 
   @Get()
   async list(
@@ -76,5 +82,20 @@ export class ProductsController {
         position: result.position
       }
     };
+  }
+
+  // Seller endpoints - Tạo và sửa sản phẩm
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('seller', 'admin')
+  @Post('seller/create')
+  async createProduct(@Req() req: any, @Body() data: any) {
+    return this.adminService.createProduct(data, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('seller', 'admin')
+  @Put('seller/:id')
+  async updateProduct(@Req() req: any, @Param('id') id: string, @Body() data: any) {
+    return this.adminService.updateProduct(parseInt(id), data, req.user);
   }
 }

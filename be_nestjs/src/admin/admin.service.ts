@@ -179,11 +179,17 @@ export class AdminService {
    * @param params - Tham số: page, limit, search, category, status
    * @returns Danh sách sản phẩm với thông tin phân trang
    */
-  async getProducts(params: any) {
+  async getProducts(params: any, user?: any) {
     const { page = 1, limit = 10, search, category, status } = params;
     const skip = (page - 1) * limit;
 
     const where: any = {};
+    
+    // Nếu là seller, chỉ lấy sản phẩm của seller đó
+    if (user && user.role === 'seller') {
+      where.sellerId = BigInt(user.id);
+    }
+    
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -272,18 +278,29 @@ export class AdminService {
   /**
    * Lấy thông tin chi tiết một sản phẩm
    * @param id - ID của sản phẩm
+   * @param user - Thông tin user (để kiểm tra quyền nếu là seller)
    * @returns Thông tin sản phẩm với category, variants, images
    */
-  async getProduct(id: number) {
+  async getProduct(id: number, user?: any) {
     try {
-      return await this.prisma.product.findUnique({
+      const product = await this.prisma.product.findUnique({
         where: { id: BigInt(id) },
         include: {
           category: true,
           variants: true,
-          images: true
+          images: true,
+          seller: { select: { id: true, fullName: true, email: true } }
         }
       });
+
+      // Nếu là seller, kiểm tra quyền sở hữu
+      if (user && user.role === 'seller' && product) {
+        if (product.sellerId && product.sellerId.toString() !== user.id.toString()) {
+          throw new Error('Không có quyền truy cập sản phẩm này');
+        }
+      }
+
+      return product;
     } catch (error) {
       console.error('Error fetching product:', error);
       throw error;
@@ -293,11 +310,17 @@ export class AdminService {
   /**
    * Tạo sản phẩm mới cùng với variants và images
    * @param data - Dữ liệu sản phẩm bao gồm variants và images
+   * @param user - Thông tin user (để set sellerId nếu là seller)
    * @returns Sản phẩm vừa tạo
    */
-  async createProduct(data: any) {
+  async createProduct(data: any, user?: any) {
     try {
       const { variants, images, ...productData } = data;
+
+      // Nếu là seller, tự động set sellerId
+      if (user && user.role === 'seller') {
+        productData.sellerId = BigInt(user.id);
+      }
 
       return await this.prisma.product.create({
         data: {
@@ -326,11 +349,33 @@ export class AdminService {
    * Xóa và tạo lại variants/images để đảm bảo tính nhất quán
    * @param id - ID của sản phẩm cần cập nhật
    * @param data - Dữ liệu mới
+   * @param user - Thông tin user (để kiểm tra quyền nếu là seller)
    * @returns Sản phẩm đã cập nhật
    */
-  async updateProduct(id: number, data: any) {
+  async updateProduct(id: number, data: any, user?: any) {
     try {
+      // Kiểm tra quyền nếu là seller
+      if (user && user.role === 'seller') {
+        const existingProduct = await this.prisma.product.findUnique({
+          where: { id: BigInt(id) },
+          select: { sellerId: true }
+        });
+
+        if (!existingProduct) {
+          throw new Error('Sản phẩm không tồn tại');
+        }
+
+        if (existingProduct.sellerId && existingProduct.sellerId.toString() !== user.id.toString()) {
+          throw new Error('Không có quyền sửa sản phẩm này');
+        }
+      }
+
       const { variants, images, ...productData } = data;
+
+      // Seller không thể thay đổi sellerId
+      if (user && user.role === 'seller') {
+        delete productData.sellerId;
+      }
 
       // Update product
       const product = await this.prisma.product.update({
@@ -373,7 +418,7 @@ export class AdminService {
         }
       }
 
-      return this.getProduct(id);
+      return this.getProduct(id, user);
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
@@ -383,10 +428,27 @@ export class AdminService {
   /**
    * Xóa sản phẩm và tất cả variants, images liên quan
    * @param id - ID của sản phẩm cần xóa
+   * @param user - Thông tin user (để kiểm tra quyền nếu là seller)
    * @returns Sản phẩm đã xóa
    */
-  async deleteProduct(id: number) {
+  async deleteProduct(id: number, user?: any) {
     try {
+      // Kiểm tra quyền nếu là seller
+      if (user && user.role === 'seller') {
+        const existingProduct = await this.prisma.product.findUnique({
+          where: { id: BigInt(id) },
+          select: { sellerId: true }
+        });
+
+        if (!existingProduct) {
+          throw new Error('Sản phẩm không tồn tại');
+        }
+
+        if (existingProduct.sellerId && existingProduct.sellerId.toString() !== user.id.toString()) {
+          throw new Error('Không có quyền xóa sản phẩm này');
+        }
+      }
+
       // Delete related records first
       await this.prisma.productVariant.deleteMany({
         where: { productId: BigInt(id) }
