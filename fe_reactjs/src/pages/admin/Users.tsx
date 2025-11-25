@@ -55,8 +55,8 @@ export default function AdminUsers() {
     { keepPreviousData: true }
   )
 
-  const users = usersData?.users || []
-  const pagination = usersData?.pagination || { page: 1, limit: 10, total: 0, pages: 0 }
+  const users = usersData?.data?.users || usersData?.users || []
+  const pagination = usersData?.data?.pagination || usersData?.pagination || { page: 1, limit: 10, total: 0, pages: 0 }
 
   // Update user role mutation
   const updateRoleMutation = useMutation(

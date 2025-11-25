@@ -40,7 +40,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin/products',
       icon: Package,
       current: location.pathname.startsWith('/admin/products'),
-      roles: ['admin'] as ('admin' | 'seller')[]
+      roles: ['admin', 'seller'] as ('admin' | 'seller')[]
     },
     {
       name: 'Danh mục',
@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin/users',
       icon: Users,
       current: location.pathname.startsWith('/admin/users'),
-      roles: ['admin'] as ('admin' | 'seller')[]
+      roles: ['admin', 'seller'] as ('admin' | 'seller')[]
     },
     {
       name: 'Đánh giá',

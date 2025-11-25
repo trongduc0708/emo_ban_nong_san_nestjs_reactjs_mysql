@@ -15,8 +15,8 @@ export class AdminController {
    */
   @Get('dashboard')
   @Roles('admin', 'seller')
-  async getDashboardStats() {
-    return this.adminService.getDashboardStats();
+  async getDashboardStats(@Req() req: any) {
+    return this.adminService.getDashboardStats(req.user);
   }
 
   /**
@@ -77,8 +77,14 @@ export class AdminController {
    */
   @Get('orders')
   @Roles('admin', 'seller')
-  async getOrders(@Query() params: any) {
-    return this.adminService.getOrders(params);
+  async getOrders(@Query() params: any, @Req() req: any) {
+    return this.adminService.getOrders(params, req.user);
+  }
+
+  @Get('orders/stats')
+  @Roles('admin', 'seller')
+  async getOrderStats(@Req() req: any) {
+    return this.adminService.getOrderStats(req.user);
   }
 
   /**
@@ -87,8 +93,8 @@ export class AdminController {
    */
   @Put('orders/:id/status')
   @Roles('admin', 'seller')
-  async updateOrderStatus(@Param('id') id: string, @Body() data: { status: string }) {
-    return this.adminService.updateOrderStatus(parseInt(id), data.status);
+  async updateOrderStatus(@Param('id') id: string, @Body() data: { status: string }, @Req() req: any) {
+    return this.adminService.updateOrderStatus(parseInt(id), data.status, req.user);
   }
 
   // Users Management
@@ -98,9 +104,9 @@ export class AdminController {
    * Chỉ dành cho admin
    */
   @Get('users')
-  @Roles('admin')
-  async getUsers(@Query() params: any) {
-    return this.adminService.getUsers(params);
+  @Roles('admin', 'seller')
+  async getUsers(@Query() params: any, @Req() req: any) {
+    return this.adminService.getUsers(params, req.user);
   }
 
   /**
@@ -108,9 +114,9 @@ export class AdminController {
    * Chỉ dành cho admin
    */
   @Get('users/:id')
-  @Roles('admin')
-  async getUser(@Param('id') id: string) {
-    return this.adminService.getUser(parseInt(id));
+  @Roles('admin', 'seller')
+  async getUser(@Param('id') id: string, @Req() req: any) {
+    return this.adminService.getUser(parseInt(id), req.user);
   }
 
   /**

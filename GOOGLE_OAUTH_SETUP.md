@@ -1,57 +1,115 @@
-# Hướng dẫn Setup Google OAuth cho Emo Nông Sản
+# Hướng dẫn cấu hình Google OAuth
 
-## Bước 1: Tạo Google OAuth App
+## Lỗi: redirect_uri_mismatch
+
+Lỗi này xảy ra khi redirect URI trong code không khớp với redirect URI đã đăng ký trong Google Cloud Console.
+
+## Các bước cấu hình
+
+### 1. Xác định Redirect URI đang sử dụng
+
+Backend đang sử dụng redirect URI mặc định:
+```
+http://localhost:3000/api/auth/google/callback
+```
+
+Nếu bạn đã set `GOOGLE_REDIRECT_URI` trong `.env`, hãy kiểm tra giá trị đó.
+
+### 2. Cấu hình trong Google Cloud Console
 
 1. Truy cập [Google Cloud Console](https://console.cloud.google.com/)
-2. Tạo project mới hoặc chọn project hiện có
+2. Chọn project của bạn
 3. Vào **APIs & Services** > **Credentials**
-4. Click **Create Credentials** > **OAuth client ID**
-5. Chọn **Web application**
-6. Cấu hình:
-   - **Name**: Emo Nông Sản
-   - **Authorized JavaScript origins**: 
-     - `http://localhost:3001` (Frontend)
-     - `http://localhost:3000` (Backend)
-   - **Authorized redirect URIs**:
-     - `http://localhost:3001/auth/google/callback`
+4. Tìm OAuth 2.0 Client ID của bạn (Client ID: `752838919439-uol5dri7q1l9d4e92iec0pcglutc67l8`)
+5. Click vào để chỉnh sửa
+6. Trong phần **Authorized redirect URIs**, thêm chính xác:
+   ```
+   http://localhost:3000/api/auth/google/callback
+   ```
+7. **Lưu ý quan trọng:**
+   - URI phải khớp **chính xác** (không có dấu `/` thừa ở cuối)
+   - Phải có `http://` hoặc `https://`
+   - Phải có đầy đủ path: `/api/auth/google/callback`
+   - Không có khoảng trắng
 
-## Bước 2: Cấu hình Environment Variables
+8. Click **Save**
 
-### Backend (.env.local)
+### 3. Cấu hình Backend (.env)
+
+Thêm vào file `.env` của backend (`be_nestjs/.env`):
+
 ```env
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=752838919439-uol5dri7q1l9d4e92iec0pcglutc67l8.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=<your-client-secret-here>
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
+BACKEND_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:5173
 ```
 
-### Frontend (.env)
-```env
-VITE_GOOGLE_CLIENT_ID="your-google-client-id"
-```
+**Lưu ý:**
+- `GOOGLE_CLIENT_SECRET`: Lấy từ Google Cloud Console (trong cùng trang với Client ID)
+- `GOOGLE_REDIRECT_URI`: Phải khớp chính xác với URI đã đăng ký trong Google Console
+- Nếu không set `GOOGLE_REDIRECT_URI`, hệ thống sẽ dùng mặc định: `http://localhost:3000/api/auth/google/callback`
 
-## Bước 3: Test Google OAuth
+### 4. Kiểm tra lại
 
-1. Chạy backend: `cd be_nextjs && npm run dev`
-2. Chạy frontend: `cd fe_reactjs && npm run dev`
-3. Truy cập `http://localhost:3001/login`
-4. Click "Đăng nhập với Google"
-5. Chọn tài khoản Google và authorize
+1. Restart backend server
+2. Kiểm tra console log khi click "Đăng nhập với Google" - sẽ thấy:
+   ```
+   === Google OAuth Debug ===
+   Client ID: ...
+   Redirect URI: ...
+   Backend URL: ...
+   ========================
+   ```
+3. Đảm bảo Redirect URI trong log khớp với URI trong Google Console
 
-## Lưu ý quan trọng
+### 5. Production Setup
 
-- Đảm bảo domain được thêm vào **Authorized JavaScript origins**
-- Google OAuth chỉ hoạt động trên HTTPS trong production
-- Cần cấu hình domain production trong Google Console khi deploy
+Khi deploy lên production, cần:
+
+1. Thêm redirect URI production vào Google Console:
+   ```
+   https://yourdomain.com/api/auth/google/callback
+   ```
+
+2. Cập nhật `.env`:
+   ```env
+   GOOGLE_REDIRECT_URI=https://yourdomain.com/api/auth/google/callback
+   BACKEND_URL=https://yourdomain.com
+   FRONTEND_URL=https://your-frontend-domain.com
+   ```
 
 ## Troubleshooting
 
-### Lỗi "This app isn't verified"
-- Thêm domain vào **Authorized JavaScript origins**
-- Kiểm tra Client ID có đúng không
+### Vẫn bị lỗi redirect_uri_mismatch?
 
-### Lỗi "redirect_uri_mismatch"
-- Kiểm tra redirect URI trong Google Console
-- Đảm bảo URI khớp chính xác
+1. **Kiểm tra lại Google Console:**
+   - Đảm bảo đã Save sau khi thêm redirect URI
+   - Có thể mất vài phút để Google cập nhật
 
-### Lỗi CORS
-- Kiểm tra cấu hình CORS trong backend
-- Đảm bảo frontend URL được allow
+2. **Kiểm tra .env:**
+   - Đảm bảo đã restart backend sau khi thay đổi .env
+   - Kiểm tra không có khoảng trắng thừa
+
+3. **Kiểm tra port:**
+   - Đảm bảo backend đang chạy trên port 3000
+   - Nếu dùng port khác, cập nhật `BACKEND_URL` và redirect URI
+
+4. **Clear cache:**
+   - Thử clear cache trình duyệt
+   - Thử incognito/private mode
+
+5. **Kiểm tra log:**
+   - Xem console log của backend để biết redirect URI đang được sử dụng
+   - So sánh với URI trong Google Console
+
+## Test
+
+Sau khi cấu hình xong:
+
+1. Click "Đăng nhập với Google" trên trang login
+2. Nếu redirect URI đúng, sẽ chuyển đến Google login page
+3. Sau khi chọn tài khoản, sẽ redirect về backend callback
+4. Backend xử lý và redirect về frontend với token

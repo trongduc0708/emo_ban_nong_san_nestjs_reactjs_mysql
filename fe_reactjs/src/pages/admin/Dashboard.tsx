@@ -1,5 +1,6 @@
 import React from 'react'
 import { useQuery } from 'react-query'
+import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Users, Package, DollarSign, TrendingUp, Plus, Eye, Shield, Loader2 } from 'lucide-react'
@@ -15,6 +16,7 @@ interface RecentOrder {
 }
 
 export default function AdminDashboard() {
+  const navigate = useNavigate()
   // Fetch dashboard stats from API
   const { data: dashboardData, isLoading, error } = useQuery(
     ['admin-dashboard'],
@@ -189,19 +191,19 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Thao tác nhanh</h2>
             
             <div className="space-y-4">
-              <Button className="w-full justify-start">
+              <Button className="w-full justify-start" onClick={() => navigate('/admin/products')}>
                 <Plus className="w-4 h-4 mr-2" />
                 Thêm sản phẩm mới
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/admin/orders')}>
                 <Package className="w-4 h-4 mr-2" />
                 Quản lý đơn hàng
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/admin/users')}>
                 <Users className="w-4 h-4 mr-2" />
                 Quản lý khách hàng
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/admin/reports')}>
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Xem báo cáo
               </Button>

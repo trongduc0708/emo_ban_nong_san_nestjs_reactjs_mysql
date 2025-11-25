@@ -54,7 +54,7 @@ function App() {
         } />
         {/* Các route chỉ dành cho Admin */}
         <Route path="/admin/products" element={
-          <ProtectedRoute requireAdmin>
+          <ProtectedRoute requireAdminOrSeller>
             <AdminProducts />
           </ProtectedRoute>
         } />
@@ -69,7 +69,7 @@ function App() {
           </ProtectedRoute>
         } />
         <Route path="/admin/users" element={
-          <ProtectedRoute requireAdmin>
+          <ProtectedRoute requireAdminOrSeller>
             <AdminUsers />
           </ProtectedRoute>
         } />
