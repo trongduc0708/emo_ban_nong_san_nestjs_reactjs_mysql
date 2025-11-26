@@ -136,59 +136,57 @@ export default function ResetPassword() {
         {/* Form */}
         <Card className="space-y-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="relative">
-              <Input
-                label="Mật khẩu mới"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Nhập mật khẩu mới"
-                icon={<Lock className="w-5 h-5" />}
-                {...register('newPassword', {
-                  required: 'Mật khẩu là bắt buộc',
-                  minLength: {
-                    value: 6,
-                    message: 'Mật khẩu phải có ít nhất 6 ký tự'
-                  }
-                })}
-                error={errors.newPassword?.message}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-            </div>
+            <Input
+              label="Mật khẩu mới"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Nhập mật khẩu mới"
+              icon={<Lock className="w-5 h-5" />}
+              {...register('newPassword', {
+                required: 'Mật khẩu là bắt buộc',
+                minLength: {
+                  value: 6,
+                  message: 'Mật khẩu phải có ít nhất 6 ký tự'
+                }
+              })}
+              error={errors.newPassword?.message}
+              rightSlot={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              }
+            />
 
-            <div className="relative">
-              <Input
-                label="Xác nhận mật khẩu"
-                type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Nhập lại mật khẩu mới"
-                icon={<Lock className="w-5 h-5" />}
-                {...register('confirmPassword', {
-                  required: 'Xác nhận mật khẩu là bắt buộc',
-                  validate: (value) =>
-                    value === newPassword || 'Mật khẩu xác nhận không khớp'
-                })}
-                error={errors.confirmPassword?.message}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-            </div>
+            <Input
+              label="Xác nhận mật khẩu"
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder="Nhập lại mật khẩu mới"
+              icon={<Lock className="w-5 h-5" />}
+              {...register('confirmPassword', {
+                required: 'Xác nhận mật khẩu là bắt buộc',
+                validate: (value) =>
+                  value === newPassword || 'Mật khẩu xác nhận không khớp'
+              })}
+              error={errors.confirmPassword?.message}
+              rightSlot={
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              }
+            />
 
             <Button
               type="submit"

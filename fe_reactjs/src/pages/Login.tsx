@@ -143,28 +143,27 @@ export default function Login() {
               error={errors.email}
             />
 
-            <div className="relative">
-              <Input
-                label="Mật khẩu"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Nhập mật khẩu"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                icon={<Lock className="w-5 h-5" />}
-                error={errors.password}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-            </div>
+            <Input
+              label="Mật khẩu"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Nhập mật khẩu"
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              icon={<Lock className="w-5 h-5" />}
+              error={errors.password}
+              rightSlot={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              }
+            />
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">

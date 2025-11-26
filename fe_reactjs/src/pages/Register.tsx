@@ -162,58 +162,56 @@ export default function Register() {
               error={errors.phone?.message}
             />
 
-            <div className="relative">
-              <Input
-                label="Mật khẩu"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Nhập mật khẩu"
-                icon={<Lock className="w-5 h-5" />}
-                {...register('password', {
-                  required: 'Mật khẩu là bắt buộc',
-                  minLength: {
-                    value: 6,
-                    message: 'Mật khẩu phải có ít nhất 6 ký tự'
-                  }
-                })}
-                error={errors.password?.message}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-            </div>
+            <Input
+              label="Mật khẩu"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Nhập mật khẩu"
+              icon={<Lock className="w-5 h-5" />}
+              {...register('password', {
+                required: 'Mật khẩu là bắt buộc',
+                minLength: {
+                  value: 6,
+                  message: 'Mật khẩu phải có ít nhất 6 ký tự'
+                }
+              })}
+              error={errors.password?.message}
+              rightSlot={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              }
+            />
 
-            <div className="relative">
-              <Input
-                label="Xác nhận mật khẩu"
-                type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Nhập lại mật khẩu"
-                icon={<Lock className="w-5 h-5" />}
-                {...register('confirmPassword', {
-                  required: 'Xác nhận mật khẩu là bắt buộc',
-                  validate: value => value === password || 'Mật khẩu không khớp'
-                })}
-                error={errors.confirmPassword?.message}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-            </div>
+            <Input
+              label="Xác nhận mật khẩu"
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder="Nhập lại mật khẩu"
+              icon={<Lock className="w-5 h-5" />}
+              {...register('confirmPassword', {
+                required: 'Xác nhận mật khẩu là bắt buộc',
+                validate: value => value === password || 'Mật khẩu không khớp'
+              })}
+              error={errors.confirmPassword?.message}
+              rightSlot={
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              }
+            />
 
             <div className="flex items-center">
               <input

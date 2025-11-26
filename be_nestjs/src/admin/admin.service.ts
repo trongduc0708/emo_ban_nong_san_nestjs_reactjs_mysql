@@ -326,52 +326,60 @@ export class AdminService {
           take: parseInt(limit),
           include: {
             category: { select: { id: true, name: true, slug: true } },
-            variants: { 
-              select: { 
+            seller: { select: { id: true, fullName: true, email: true } },
+            variants: {
+              select: {
                 id: true,
                 variantName: true,
                 unitLabel: true,
                 price: true,
                 compareAtPrice: true,
                 stockQuantity: true,
-                isActive: true
+                isActive: true,
               },
-              orderBy: { id: 'asc' }
+              orderBy: { id: 'asc' },
             },
-            images: { 
+            images: {
               select: { id: true, imageUrl: true, position: true },
-              orderBy: { position: 'asc' }
+              orderBy: { position: 'asc' },
             },
-            _count: { 
-              select: { 
+            _count: {
+              select: {
                 orderItems: true,
                 variants: true,
-                images: true
-              } 
-            }
+                images: true,
+              },
+            },
           },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
         }),
         this.prisma.product.count({ where })
       ]);
 
       
       // Convert BigInt to string and handle DECIMAL types
-      const processedProducts = products.map(product => ({
+      const processedProducts = products.map((product) => ({
         ...product,
         id: product.id.toString(),
         categoryId: product.categoryId?.toString(),
-        variants: product.variants.map(variant => ({
+        seller: product.seller
+          ? {
+              id: product.seller.id.toString(),
+              fullName: product.seller.fullName,
+              email: product.seller.email,
+            }
+          : null,
+        variants: product.variants.map((variant) => ({
           ...variant,
           id: variant.id.toString(),
           price: Number(variant.price), // Convert DECIMAL to number
           compareAtPrice: variant.compareAtPrice ? Number(variant.compareAtPrice) : null,
-          stockQuantity: Number(variant.stockQuantity)
+          stockQuantity: Number(variant.stockQuantity),
         })),
-        images: product.images.map(image => ({
+        images: product.images.map((image) => ({
           ...image,
-          id: image.id.toString()
-        }))
+          id: image.id.toString(),
+        })),
       }));
 
       return {

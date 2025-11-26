@@ -33,6 +33,11 @@ interface Product {
     name: string
     slug: string
   }
+  seller?: {
+    id: number
+    fullName: string
+    email: string
+  } | null
   variants: { 
     id: number
     variantName: string
@@ -451,6 +456,9 @@ export default function AdminProducts() {
                     Danh mục
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Người tạo
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Xuất xứ
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -507,9 +515,12 @@ export default function AdminProducts() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {product.category?.name || 'Chưa phân loại'}
-                      </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {product.category?.name || 'Chưa phân loại'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {product.seller?.fullName || 'Admin'}
+                    </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {product.origin || 'N/A'}
                       </td>
