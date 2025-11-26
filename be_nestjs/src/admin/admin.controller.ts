@@ -141,10 +141,12 @@ export class AdminController {
 
   /**
    * Lấy danh sách tất cả danh mục
-   * Cho phép admin và seller (seller chỉ dùng để chọn danh mục khi tạo sản phẩm)
+   * Cho phép tất cả user đã đăng nhập (admin, seller, customer) lấy danh mục
+   * - Admin, seller dùng để quản lý / chọn danh mục khi tạo sản phẩm
+   * - Customer có thể tận dụng cho các chức năng khác nếu cần
    */
   @Get('categories')
-  @Roles('admin', 'seller')
+  @Roles('admin', 'seller', 'customer')
   async getCategories() {
     return this.adminService.getCategories();
   }

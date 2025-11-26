@@ -35,9 +35,14 @@ interface Image {
   file?: File
 }
 
+interface Category {
+  id: number | string
+  name: string
+}
+
 export default function ProductForm({ product, onClose, onSuccess }: ProductFormProps) {
   const [loading, setLoading] = useState(false)
-  const [categories, setCategories] = useState([])
+  const [categories, setCategories] = useState<Category[]>([])
   
   // Form data
   const [formData, setFormData] = useState({
@@ -106,17 +111,11 @@ export default function ProductForm({ product, onClose, onSuccess }: ProductForm
   const loadCategories = async () => {
     try {
       const response = await adminApi.getCategories()
-      setCategories(response.data)
+      setCategories(response.data as Category[])
     } catch (error) {
       console.error('Error loading categories:', error)
-      // Fallback to mock data
-      setCategories([
-        { id: 1, name: 'Rau Củ' },
-        { id: 2, name: 'Trái Cây' },
-        { id: 3, name: 'Đặc Sản' },
-        { id: 4, name: 'Hữu Cơ' },
-        { id: 5, name: 'Gia Vị' }
-      ])
+      toast.error('Không tải được danh mục từ server')
+      setCategories([])
     }
   }
 
