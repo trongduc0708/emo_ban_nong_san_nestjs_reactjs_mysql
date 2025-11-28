@@ -210,6 +210,7 @@ export const adminApi = {
   
   // Quản lý đơn hàng
   getOrders: (params?: any) => api.get('/admin/orders', { params }),
+  getOrder: (id: number) => api.get(`/admin/orders/${id}`),
   getOrderStats: () => api.get('/admin/orders/stats'),
   updateOrderStatus: (id: number, status: string) =>
     api.put(`/admin/orders/${id}/status`, { status }),

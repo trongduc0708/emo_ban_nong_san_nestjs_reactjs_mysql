@@ -677,6 +677,57 @@ export class AdminService {
     }
   }
 
+  async getOrder(id: number, currentUser?: any) {
+    const isSeller = currentUser?.role === 'seller';
+    const sellerId = isSeller ? BigInt(currentUser.id) : null;
+
+    const include = {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+        },
+      },
+      items: {
+        include: {
+          product: { select: { id: true, name: true, sellerId: true } },
+        },
+      },
+      payment: {
+        select: {
+          id: true,
+          provider: true,
+          amount: true,
+          status: true,
+          paidAt: true,
+        },
+      },
+    };
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: BigInt(id) },
+      include,
+    });
+
+    if (!order) {
+      throw new Error('Đơn hàng không tồn tại');
+    }
+
+    if (isSeller) {
+      const hasPermission = order.items.some(
+        (item) => item.product?.sellerId && item.product.sellerId.toString() === sellerId?.toString(),
+      );
+
+      if (!hasPermission) {
+        throw new Error('Không có quyền xem đơn hàng này');
+      }
+    }
+
+    return this.formatOrder(order, sellerId);
+  }
+
   async getOrderStats(currentUser?: any) {
     const isSeller = currentUser?.role === 'seller';
     const sellerId = isSeller ? BigInt(currentUser.id) : null;

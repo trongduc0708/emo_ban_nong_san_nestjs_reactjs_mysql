@@ -81,6 +81,16 @@ export class AdminController {
     return this.adminService.getOrders(params, req.user);
   }
 
+  /**
+   * Lấy chi tiết đơn hàng
+   * Cho phép admin và seller (seller chỉ xem đơn chứa sản phẩm của mình)
+   */
+  @Get('orders/:id')
+  @Roles('admin', 'seller')
+  async getOrder(@Param('id') id: string, @Req() req: any) {
+    return this.adminService.getOrder(parseInt(id), req.user);
+  }
+
   @Get('orders/stats')
   @Roles('admin', 'seller')
   async getOrderStats(@Req() req: any) {
