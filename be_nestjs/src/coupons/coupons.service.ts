@@ -227,7 +227,12 @@ export class CouponsService {
         code: data.code,
         type: data.type,
         value: Number(data.value),
-        isActive: data.isActive !== undefined ? data.isActive : true
+        isActive:
+          typeof data.isActive === 'string'
+            ? data.isActive === 'true'
+            : data.isActive !== undefined
+              ? !!data.isActive
+              : true
       }
 
       // Handle optional fields safely

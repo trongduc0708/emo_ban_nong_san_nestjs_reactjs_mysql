@@ -188,9 +188,13 @@ export default function CouponForm({ coupon, onClose, onSuccess }: CouponFormPro
                     Trạng thái
                   </label>
                   <select
-                    name="isActive"
                     value={formData.isActive ? 'true' : 'false'}
-                    onChange={handleInputChange}
+                    onChange={(e) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        isActive: e.target.value === 'true'
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="true">Hoạt động</option>

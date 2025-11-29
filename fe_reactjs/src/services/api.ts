@@ -214,6 +214,8 @@ export const adminApi = {
   getOrderStats: () => api.get('/admin/orders/stats'),
   updateOrderStatus: (id: number, status: string) =>
     api.put(`/admin/orders/${id}/status`, { status }),
+  updateOrderPaymentStatus: (id: number, paymentStatus: string) =>
+    api.put(`/orders/${id}/payment-status`, { paymentStatus }),
   
   // Quản lý người dùng
   getUsers: (params?: any) => api.get('/admin/users', { params }),
