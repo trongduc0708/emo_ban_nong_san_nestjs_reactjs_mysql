@@ -1,8 +1,13 @@
 import { Controller, Post, Body, Get, Query, Param } from '@nestjs/common';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 import { ChatbotService } from './chatbot.service';
 
 export class ChatDto {
+  @IsString()
   message: string;
+
+  @IsOptional()
+  @IsNumber()
   userId?: number;
 }
 
@@ -16,7 +21,7 @@ export class ChatbotController {
       chatDto.message,
       chatDto.userId,
     );
-    return { message: response };
+    return response;
   }
 
   @Get('search')

@@ -13,8 +13,14 @@ export class ChatbotService {
     });
   }
 
-  async chat(message: string, userId?: number): Promise<string> {
+  async chat(message: string, userId?: number): Promise<{ message: string; products?: any[] }> {
     try {
+      // Kiểm tra API key
+      if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.trim() === '') {
+        this.logger.warn('OpenAI API key is not configured');
+        return await this.getFallbackResponse(message);
+      }
+
       // Lấy thông tin database context
       const dbContext = await this.getDatabaseContext();
 
@@ -44,15 +50,108 @@ HƯỚNG DẪN:
         max_tokens: 500,
       });
 
-      return completion.choices[0]?.message?.content || 'Xin lỗi, tôi không thể trả lời câu hỏi này.';
-    } catch (error) {
-      this.logger.error('Error in chat:', error);
-      if (error instanceof Error) {
-        if (error.message.includes('API key')) {
-          return 'Lỗi: Chưa cấu hình OpenAI API key. Vui lòng thêm OPENAI_API_KEY vào file .env';
+      const responseMessage = completion.choices[0]?.message?.content || 'Xin lỗi, tôi không thể trả lời câu hỏi này.';
+      
+      // Kiểm tra xem message có liên quan đến tìm kiếm sản phẩm không
+      const lowerMessage = message.toLowerCase();
+      if (lowerMessage.includes('tìm') || lowerMessage.includes('sản phẩm') || lowerMessage.includes('mua') || lowerMessage.includes('có gì')) {
+        const searchQuery = message.replace(/tìm|sản phẩm|mua|về|có gì|/gi, '').trim() || message;
+        const products = await this.searchProducts(searchQuery);
+        if (products.length > 0) {
+          return {
+            message: responseMessage,
+            products: products.map(p => ({
+              id: p.id,
+              name: p.name,
+              slug: p.slug,
+              category: p.category?.name,
+              image: p.images?.[0]?.imageUrl,
+            })),
+          };
         }
       }
-      return 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.';
+      
+      return { message: responseMessage };
+    } catch (error: any) {
+      this.logger.error('Error in chat:', error);
+      
+      // Xử lý các lỗi cụ thể từ OpenAI API
+      if (error?.status === 429) {
+        if (error?.code === 'insufficient_quota' || error?.error?.code === 'insufficient_quota') {
+          this.logger.warn('OpenAI API quota exceeded, using fallback response');
+          return await this.getFallbackResponse(message);
+        }
+        return { message: 'Xin lỗi, hệ thống đang quá tải. Vui lòng thử lại sau vài phút.' };
+      }
+
+      if (error?.status === 401) {
+        return { message: 'Lỗi: OpenAI API key không hợp lệ. Vui lòng kiểm tra cấu hình.' };
+      }
+
+      if (error?.message?.includes('API key') || error?.message?.includes('Invalid API key')) {
+        return { message: 'Lỗi: Chưa cấu hình OpenAI API key. Vui lòng thêm OPENAI_API_KEY vào file .env' };
+      }
+
+      // Fallback cho các lỗi khác
+      this.logger.warn('OpenAI API error, using fallback response');
+      return await this.getFallbackResponse(message);
+    }
+  }
+
+  private async getFallbackResponse(message: string): Promise<{ message: string; products?: any[] }> {
+    try {
+      const lowerMessage = message.toLowerCase().trim();
+      
+      // Chào hỏi
+      if (lowerMessage.includes('xin chào') || lowerMessage.includes('chào') || lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+        return { message: 'Xin chào! Tôi là trợ lý AI của Emo Nông Sản. Tôi có thể giúp bạn tìm kiếm sản phẩm, xem thông tin đơn hàng và trả lời các câu hỏi. Bạn cần hỗ trợ gì?' };
+      }
+
+      // Tìm kiếm sản phẩm
+      if (lowerMessage.includes('tìm') || lowerMessage.includes('sản phẩm') || lowerMessage.includes('mua') || lowerMessage.includes('có gì')) {
+        const searchQuery = message.replace(/tìm|sản phẩm|mua|về|có gì|/gi, '').trim() || message;
+        const products = await this.searchProducts(searchQuery);
+        if (products.length > 0) {
+          const productList = products.map(p => `- ${p.name} (${p.category?.name || 'Chưa phân loại'})`).join('\n');
+          return {
+            message: `Tôi tìm thấy ${products.length} sản phẩm phù hợp:\n${productList}`,
+            products: products.map(p => ({
+              id: p.id,
+              name: p.name,
+              slug: p.slug,
+              category: p.category?.name,
+              image: p.images?.[0]?.imageUrl,
+            })),
+          };
+        }
+        return { message: 'Tôi có thể giúp bạn tìm kiếm sản phẩm. Vui lòng cho tôi biết bạn đang tìm sản phẩm gì?' };
+      }
+
+      // Câu hỏi về đơn hàng
+      if (lowerMessage.includes('đơn hàng') || lowerMessage.includes('order')) {
+        return { message: 'Để kiểm tra đơn hàng, bạn vui lòng đăng nhập vào tài khoản và vào mục "Đơn hàng của tôi" hoặc liên hệ hotline để được hỗ trợ.' };
+      }
+
+      // Câu hỏi về giá
+      if (lowerMessage.includes('giá') || lowerMessage.includes('price') || lowerMessage.includes('bao nhiêu')) {
+        return { message: 'Giá sản phẩm được hiển thị trên từng trang sản phẩm. Bạn có thể xem chi tiết giá và các biến thể sản phẩm khi xem thông tin sản phẩm.' };
+      }
+
+      // Câu hỏi về giao hàng
+      if (lowerMessage.includes('giao hàng') || lowerMessage.includes('ship') || lowerMessage.includes('vận chuyển')) {
+        return { message: 'Chúng tôi giao hàng toàn quốc. Phí vận chuyển và thời gian giao hàng phụ thuộc vào địa chỉ nhận hàng. Bạn có thể xem chi tiết khi đặt hàng.' };
+      }
+
+      // Câu hỏi về thanh toán
+      if (lowerMessage.includes('thanh toán') || lowerMessage.includes('payment') || lowerMessage.includes('trả tiền')) {
+        return { message: 'Chúng tôi hỗ trợ nhiều phương thức thanh toán: thanh toán khi nhận hàng (COD), chuyển khoản ngân hàng, và ví điện tử.' };
+      }
+
+      // Câu hỏi chung
+      return { message: 'Cảm ơn bạn đã liên hệ! Tôi có thể giúp bạn:\n- Tìm kiếm sản phẩm\n- Xem thông tin đơn hàng\n- Tư vấn về sản phẩm\n- Hỗ trợ về giao hàng và thanh toán\n\nBạn cần hỗ trợ gì cụ thể?' };
+    } catch (error) {
+      this.logger.error('Error in fallback response:', error);
+      return { message: 'Xin lỗi, tôi đang gặp sự cố kỹ thuật. Vui lòng thử lại sau hoặc liên hệ hotline để được hỗ trợ.' };
     }
   }
 

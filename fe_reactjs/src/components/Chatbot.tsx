@@ -1,13 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { MessageCircle, X, Send, Bot, User } from 'lucide-react'
+import { MessageCircle, X, Send, Bot, User, ExternalLink } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { chatbotApi } from '@/services/api'
 import toast from 'react-hot-toast'
+
+interface Product {
+  id: number
+  name: string
+  slug: string
+  category?: string
+  image?: string
+}
 
 interface Message {
   id: string
   text: string
   sender: 'user' | 'bot'
   timestamp: Date
+  products?: Product[]
 }
 
 export default function Chatbot() {
@@ -60,6 +70,7 @@ export default function Chatbot() {
         text: response.data.message,
         sender: 'bot',
         timestamp: new Date(),
+        products: response.data.products,
       }
       setMessages((prev) => [...prev, botMessage])
     } catch (error: any) {
@@ -153,6 +164,35 @@ export default function Chatbot() {
                   <p className="text-sm whitespace-pre-wrap break-words">
                     {message.text}
                   </p>
+                  
+                  {/* Product Buttons */}
+                  {message.sender === 'bot' && message.products && message.products.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {message.products.map((product) => (
+                        <Link
+                          key={product.id}
+                          to={`/products/${product.id}`}
+                          onClick={() => setIsOpen(false)}
+                          className="block w-full p-2 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors group"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {product.name}
+                              </p>
+                              {product.category && (
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                  {product.category}
+                                </p>
+                              )}
+                            </div>
+                            <ExternalLink className="w-4 h-4 text-green-600 ml-2 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  
                   <p className="text-xs mt-1 opacity-70">
                     {message.timestamp.toLocaleTimeString('vi-VN', {
                       hour: '2-digit',
