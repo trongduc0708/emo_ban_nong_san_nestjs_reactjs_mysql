@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, Post, Put, UseInterceptors, UploadedFile, UseGuards, Req, Body } from '@nestjs/common';
+import { Controller, Get, Param, Query, Post, Put, UseInterceptors, UploadedFile, UseGuards, Req, Body, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -6,6 +6,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { multerConfig } from '../config/multer.config';
 import { AdminService } from '../admin/admin.service';
+import { CreateReviewDto } from './dto/create-review.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -97,5 +98,35 @@ export class ProductsController {
   @Put('seller/:id')
   async updateProduct(@Req() req: any, @Param('id') id: string, @Body() data: any) {
     return this.adminService.updateProduct(parseInt(id), data, req.user);
+  }
+
+  // Customer endpoint - Tạo đánh giá sản phẩm
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/reviews')
+  async createReview(
+    @Req() req: any,
+    @Param('id') productId: string,
+    @Body() dto: CreateReviewDto
+  ) {
+    try {
+      const userId = Number(req.user?.id);
+      if (isNaN(userId)) {
+        throw new BadRequestException('Invalid user ID');
+      }
+
+      const review = await this.productsService.createReview(
+        userId,
+        Number(productId),
+        dto
+      );
+
+      return {
+        success: true,
+        message: 'Đánh giá đã được gửi và đang chờ phê duyệt',
+        data: review,
+      };
+    } catch (error: any) {
+      throw new BadRequestException(error.message || 'Có lỗi xảy ra khi tạo đánh giá');
+    }
   }
 }

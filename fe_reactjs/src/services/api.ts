@@ -126,6 +126,14 @@ export const productApi = {
   getProductsByCategory: (categorySlug: string, limit?: number) => 
     api.get(`/products/category/${categorySlug}`, { params: { limit } }),
   
+  // Tạo đánh giá sản phẩm
+  createReview: (productId: number, data: {
+    rating: number
+    comment?: string
+    orderId?: number
+    images?: string[]
+  }) => api.post(`/products/${productId}/reviews`, data),
+  
   // Lấy danh mục
   getCategories: () => api.get('/categories'),
   

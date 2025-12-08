@@ -4,10 +4,11 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Star, Heart, Share2, Truck, Shield, RotateCcw, ShoppingCart, Loader2 } from 'lucide-react'
-import { useQuery } from 'react-query'
+import { useQuery, useQueryClient } from 'react-query'
 import { productApi } from '@/services/api'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
+import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
 
 export default function ProductDetail() {
@@ -16,9 +17,14 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState('description')
   const [addingToCart, setAddingToCart] = useState(false)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewComment, setReviewComment] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
   
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
   const productId = useMemo(() => Number(id), [id])
   const { data, isLoading } = useQuery([
@@ -29,13 +35,81 @@ export default function ProductDetail() {
   const images: string[] = product?.images?.map((i: any) => i.imageUrl) || []
   const variants: any[] = product?.variants || []
   const displayPrice = variants[selectedVariant]?.price || 0
-  const reviews = (product?.reviews || []).map((r: any) => ({
-    id: r.id,
-    user: r.user?.fullName || 'Khách',
-    rating: r.rating,
-    comment: r.comment,
-    date: new Date(r.createdAt || Date.now()).toLocaleDateString('vi-VN')
-  }))
+  const reviews = useMemo(() => {
+    if (!product?.reviews || !Array.isArray(product.reviews)) {
+      return []
+    }
+    try {
+      return product.reviews.map((r: any) => {
+        let dateStr = 'Chưa có ngày'
+        try {
+          if (r.createdAt) {
+            const date = typeof r.createdAt === 'string' ? new Date(r.createdAt) : r.createdAt
+            if (date instanceof Date && !isNaN(date.getTime())) {
+              dateStr = date.toLocaleDateString('vi-VN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })
+            }
+          }
+        } catch (dateError) {
+          console.error('Error parsing date:', dateError)
+        }
+        
+        return {
+          id: r.id || Math.random(),
+          userId: r.userId ? Number(r.userId) : null,
+          user: r.user?.fullName || 'Khách',
+          rating: r.rating || 0,
+          comment: r.comment || '',
+          date: dateStr
+        }
+      })
+    } catch (error) {
+      console.error('Error mapping reviews:', error)
+      return []
+    }
+  }, [product?.reviews])
+
+  // Kiểm tra user đã đánh giá chưa
+  const userReview = useMemo(() => {
+    if (!user || !reviews.length) return null
+    return reviews.find((r: any) => r.userId === user.id) || null
+  }, [user, reviews])
+
+  // Handle submit review
+  const handleSubmitReview = async () => {
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để đánh giá sản phẩm')
+      return
+    }
+
+    if (reviewRating === 0) {
+      toast.error('Vui lòng chọn số sao đánh giá')
+      return
+    }
+
+    try {
+      setSubmittingReview(true)
+      await productApi.createReview(productId, {
+        rating: reviewRating,
+        comment: reviewComment.trim() || undefined,
+      })
+      
+      toast.success('Đánh giá đã được gửi và đang chờ phê duyệt')
+      setReviewRating(0)
+      setReviewComment('')
+      
+      // Refresh product data
+      queryClient.invalidateQueries(['product', productId])
+    } catch (error: any) {
+      console.error('Error submitting review:', error)
+      toast.error(error.response?.data?.message || error.message || 'Có lỗi xảy ra khi gửi đánh giá')
+    } finally {
+      setSubmittingReview(false)
+    }
+  }
 
   // Handle wishlist toggle
   const handleWishlistToggle = async () => {
@@ -292,29 +366,119 @@ export default function ProductDetail() {
 
           {activeTab === 'reviews' && (
             <div className="space-y-6">
-              {reviews.map((review: any) => (
-                <Card key={review.id} className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-semibold text-gray-900">
-                        {review.user}
-                      </span>
-                      <div className="flex text-yellow-400">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < review.rating ? 'fill-current' : ''
-                            }`}
-                          />
+              {/* Form đánh giá */}
+              {user && !userReview && (
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Viết đánh giá</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Đánh giá của bạn *
+                      </label>
+                      <div className="flex space-x-1">
+                        {[1, 2, 3, 4, 5].map((rating) => (
+                          <button
+                            key={rating}
+                            type="button"
+                            onClick={() => setReviewRating(rating)}
+                            className="focus:outline-none"
+                          >
+                            <Star
+                              className={`w-8 h-8 transition-colors ${
+                                rating <= reviewRating
+                                  ? 'text-yellow-400 fill-current'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          </button>
                         ))}
                       </div>
                     </div>
-                    <span className="text-sm text-gray-500">{review.date}</span>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nhận xét (tùy chọn)
+                      </label>
+                      <textarea
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        rows={4}
+                      />
+                    </div>
+                    <Button
+                      onClick={handleSubmitReview}
+                      disabled={submittingReview || reviewRating === 0}
+                      className="w-full"
+                    >
+                      {submittingReview ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Đang gửi...
+                        </>
+                      ) : (
+                        'Gửi đánh giá'
+                      )}
+                    </Button>
                   </div>
-                  <p className="text-gray-600">{review.comment}</p>
                 </Card>
-              ))}
+              )}
+
+              {user && userReview && (
+                <Card className="p-4 bg-green-50 border-green-200">
+                  <p className="text-green-700">
+                    ✓ Bạn đã đánh giá sản phẩm này. Mỗi khách hàng chỉ được đánh giá 1 lần cho mỗi sản phẩm.
+                  </p>
+                </Card>
+              )}
+
+              {!user && (
+                <Card className="p-4 bg-blue-50 border-blue-200">
+                  <p className="text-blue-700">
+                    Vui lòng đăng nhập và mua sản phẩm (đơn hàng đã hoàn thành) để có thể đánh giá.
+                  </p>
+                </Card>
+              )}
+
+              {/* Danh sách đánh giá */}
+              {!product ? (
+                <div className="text-center text-gray-500 py-8">
+                  Đang tải đánh giá...
+                </div>
+              ) : reviews.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">
+                  Chưa có đánh giá nào cho sản phẩm này.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold">Đánh giá từ khách hàng ({reviews.length})</h4>
+                  {reviews.map((review: any) => (
+                    <Card key={review.id} className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-semibold text-gray-900">
+                            {review.user || 'Khách'}
+                          </span>
+                          <div className="flex text-yellow-400">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < (review.rating || 0) ? 'fill-current' : ''
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-sm text-gray-500">{review.date}</span>
+                      </div>
+                      {review.comment && (
+                        <p className="text-gray-600">{review.comment}</p>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

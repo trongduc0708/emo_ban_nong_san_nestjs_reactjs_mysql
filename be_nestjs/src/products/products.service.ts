@@ -125,7 +125,16 @@ export class ProductsService {
               : null,
           }
         : null,
-      reviews: product.reviews,
+      reviews: product.reviews.map((r: any) => ({
+        ...r,
+        id: Number(r.id),
+        userId: Number(r.userId),
+        productId: Number(r.productId),
+        orderId: r.orderId ? Number(r.orderId) : null,
+        rating: Number(r.rating),
+        createdAt: r.createdAt,
+        user: r.user,
+      })),
       variants: product.variants.map((v) => ({
         ...v,
         id: Number(v.id),
@@ -265,6 +274,117 @@ export class ProductsService {
       productId: Number(productImage.productId),
       imageUrl: productImage.imageUrl,
       position: productImage.position,
+    };
+  }
+
+  async createReview(userId: number, productId: number, data: { rating: number; comment?: string; orderId?: number; images?: string[] }) {
+    // 1. Kiểm tra sản phẩm tồn tại
+    const product = await this.prisma.product.findUnique({
+      where: { id: BigInt(productId) },
+    });
+
+    if (!product) {
+      throw new Error('Sản phẩm không tồn tại');
+    }
+
+    // 2. Kiểm tra user đã đánh giá sản phẩm này chưa
+    const existingReview = await this.prisma.review.findFirst({
+      where: {
+        userId: BigInt(userId),
+        productId: BigInt(productId),
+      },
+    });
+
+    if (existingReview) {
+      throw new Error('Bạn đã đánh giá sản phẩm này rồi. Mỗi khách hàng chỉ được đánh giá 1 lần cho mỗi sản phẩm.');
+    }
+
+    // 3. Kiểm tra user đã mua sản phẩm này chưa (nếu có orderId)
+    if (data.orderId) {
+      const order = await this.prisma.order.findFirst({
+        where: {
+          id: BigInt(data.orderId),
+          userId: BigInt(userId),
+          status: 'COMPLETED',
+        },
+        include: {
+          items: {
+            where: {
+              productId: BigInt(productId),
+            },
+          },
+        },
+      });
+
+      if (!order) {
+        throw new Error('Đơn hàng không tồn tại hoặc chưa hoàn thành');
+      }
+
+      if (order.items.length === 0) {
+        throw new Error('Bạn chưa mua sản phẩm này. Chỉ khách hàng đã mua và đơn hàng đã hoàn thành mới được đánh giá.');
+      }
+    } else {
+      // Nếu không có orderId, kiểm tra user có đơn hàng COMPLETED chứa sản phẩm này không
+      const completedOrder = await this.prisma.order.findFirst({
+        where: {
+          userId: BigInt(userId),
+          status: 'COMPLETED',
+          items: {
+            some: {
+              productId: BigInt(productId),
+            },
+          },
+        },
+      });
+
+      if (!completedOrder) {
+        throw new Error('Bạn chưa mua sản phẩm này hoặc đơn hàng chưa hoàn thành. Chỉ khách hàng đã mua và đơn hàng đã hoàn thành mới được đánh giá.');
+      }
+    }
+
+    // 4. Tạo review
+    const reviewData: any = {
+      userId: BigInt(userId),
+      productId: BigInt(productId),
+      orderId: data.orderId ? BigInt(data.orderId) : null,
+      rating: data.rating,
+      comment: data.comment || null,
+      isApproved: false, // Cần admin phê duyệt
+    };
+
+    // Chỉ set imagesJson nếu có images
+    if (data.images && data.images.length > 0) {
+      reviewData.imagesJson = JSON.stringify(data.images);
+    }
+
+    const review = await this.prisma.review.create({
+      data: reviewData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    return {
+      id: Number(review.id),
+      userId: Number(review.userId),
+      productId: Number(review.productId),
+      orderId: review.orderId ? Number(review.orderId) : null,
+      rating: review.rating,
+      comment: review.comment,
+      imagesJson: review.imagesJson ? (typeof review.imagesJson === 'string' ? JSON.parse(review.imagesJson) : review.imagesJson) : null,
+      isApproved: review.isApproved,
+      createdAt: review.createdAt,
+      user: {
+        id: Number(review.user.id),
+        fullName: review.user.fullName,
+        avatarUrl: review.user.avatarUrl,
+      },
     };
   }
 }
