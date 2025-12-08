@@ -103,6 +103,11 @@ export const authApi = {
     }),
 }
 
+// API cho Settings (public)
+export const settingsApi = {
+  getSettings: () => api.get('/settings'),
+}
+
 // API cho Products
 export const productApi = {
   // Lấy danh sách sản phẩm

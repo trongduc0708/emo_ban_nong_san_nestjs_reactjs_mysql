@@ -5,6 +5,8 @@ import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { ShoppingCart, User, LogOut, Menu, X, Heart } from 'lucide-react'
 import { useState } from 'react'
+import { useQuery } from 'react-query'
+import { settingsApi } from '@/services/api'
 import Chatbot from './Chatbot'
 
 interface LayoutProps {
@@ -17,6 +19,22 @@ export default function Layout({ children }: LayoutProps) {
   const { wishlistItems } = useWishlist()
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // Fetch settings
+  const { data: settings } = useQuery(
+    ['public-settings'],
+    () => settingsApi.getSettings().then(res => res.data),
+    {
+      staleTime: 5 * 60 * 1000, // Cache 5 phút
+      retry: 1,
+    }
+  )
+
+  const siteName = settings?.site_name || 'Emo Nông Sản'
+  const siteDescription = settings?.site_description || 'Website bán nông sản địa phương tươi ngon, chất lượng cao'
+  const contactEmail = settings?.contact_email || 'info@emonongsan.com'
+  const contactPhone = settings?.contact_phone || '0123 456 789'
+  const contactAddress = settings?.contact_address || '123 Đường ABC, Quận XYZ, TP.HCM'
 
   const isActive = (path: string) => location.pathname === path
 
@@ -31,7 +49,7 @@ export default function Layout({ children }: LayoutProps) {
               <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xl">E</span>
               </div>
-              <span className="text-xl font-bold text-gray-800">Emo Nông Sản</span>
+              <span className="text-xl font-bold text-gray-800">{siteName}</span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -267,10 +285,10 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold">E</span>
                 </div>
-                <span className="text-lg font-bold">Emo Nông Sản</span>
+                <span className="text-lg font-bold">{siteName}</span>
               </div>
               <p className="text-gray-300 text-sm">
-                Website bán nông sản địa phương tươi ngon, chất lượng cao
+                {siteDescription}
               </p>
             </div>
             <div>
@@ -292,14 +310,14 @@ export default function Layout({ children }: LayoutProps) {
             <div>
               <h3 className="text-lg font-semibold mb-4">Liên hệ</h3>
               <ul className="space-y-2 text-sm text-gray-300">
-                <li>📧 info@emonongsan.com</li>
-                <li>📞 0123 456 789</li>
-                <li>📍 123 Đường ABC, Quận XYZ, TP.HCM</li>
+                {contactEmail && <li>📧 {contactEmail}</li>}
+                {contactPhone && <li>📞 {contactPhone}</li>}
+                {contactAddress && <li>📍 {contactAddress}</li>}
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-300">
-            <p>&copy; 2024 Emo Nông Sản. Tất cả quyền được bảo lưu.</p>
+            <p>&copy; {new Date().getFullYear()} {siteName}. Tất cả quyền được bảo lưu.</p>
           </div>
         </div>
       </footer>
