@@ -56,7 +56,9 @@ export class CartService {
     console.log('Adding to cart:', { userId, productId, variantId, quantity });
 
     // LƯU Ý: Chỉ kiểm tra sản phẩm tồn tại, KHÔNG trừ số lượng kho
-    // Số lượng kho chỉ được trừ khi thanh toán thành công
+    // Số lượng kho sẽ được trừ khi:
+    // - COD: Khi đặt hàng (processPayment)
+    // - VNPay: Khi thanh toán thành công (handleVnpayReturn)
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
       include: { variants: true },
@@ -79,6 +81,29 @@ export class CartService {
         throw new BadRequestException('Biến thể sản phẩm không tồn tại');
       }
       console.log('Selected variant:', selectedVariant);
+      
+      // Chỉ kiểm tra số lượng tồn kho (không trừ)
+      // Kiểm tra tổng số lượng trong giỏ hàng + số lượng muốn thêm
+      const cart = await this.prisma.cart.findFirst({
+        where: { userId: BigInt(userId) },
+        include: {
+          items: {
+            where: {
+              productId,
+              variantId: variantId || null,
+            }
+          }
+        }
+      });
+      
+      const currentCartQuantity = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
+      const totalQuantity = currentCartQuantity + quantity;
+      
+      if (selectedVariant.stockQuantity < totalQuantity) {
+        throw new BadRequestException(
+          `Biến thể "${selectedVariant.variantName}" chỉ còn ${selectedVariant.stockQuantity} sản phẩm trong kho`
+        );
+      }
     }
 
     // Tìm hoặc tạo giỏ hàng
@@ -147,17 +172,30 @@ export class CartService {
 
     const item = await this.prisma.cartItem.findFirst({
       where: { id: itemId, cartId: cart.id },
+      include: {
+        variant: true
+      }
     });
 
     if (!item) {
       throw new NotFoundException('Sản phẩm không tồn tại trong giỏ hàng');
     }
 
+    // Kiểm tra số lượng tồn kho nếu tăng số lượng
+    if (quantity > item.quantity && item.variantId && item.variant) {
+      const quantityDiff = quantity - item.quantity;
+      if (item.variant.stockQuantity < quantityDiff) {
+        throw new BadRequestException(
+          `Biến thể "${item.variant.variantName}" chỉ còn ${item.variant.stockQuantity} sản phẩm trong kho`
+        );
+      }
+    }
+
     if (quantity === 0) {
       // Xóa item nếu quantity = 0
       await this.prisma.cartItem.delete({ where: { id: itemId } });
     } else {
-      // Cập nhật quantity
+      // Cập nhật quantity (không trừ số lượng kho)
       await this.prisma.cartItem.update({
         where: { id: itemId },
         data: { quantity },

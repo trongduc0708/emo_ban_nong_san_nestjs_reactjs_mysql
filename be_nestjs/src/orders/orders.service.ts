@@ -237,6 +237,83 @@ export class OrdersService {
    */
   async updateOrderStatus(id: number, status: string) {
     try {
+      // Lấy đơn hàng hiện tại để kiểm tra status cũ
+      const currentOrder = await this.prisma.order.findUnique({
+        where: { id: BigInt(id) },
+        include: {
+          items: {
+            include: {
+              variant: { select: { id: true, variantName: true } }
+            }
+          }
+        }
+      });
+
+      if (!currentOrder) {
+        throw new Error('Đơn hàng không tồn tại');
+      }
+
+      const oldStatus = currentOrder.status;
+      const newStatus = status.toUpperCase();
+      const isCancelling = (newStatus === 'CANCELLED' || newStatus === 'REFUNDED') && 
+                           oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED';
+      const isRestoring = (oldStatus === 'CANCELLED' || oldStatus === 'REFUNDED') && 
+                          newStatus !== 'CANCELLED' && newStatus !== 'REFUNDED';
+
+      // Kiểm tra xem đơn hàng đã trừ số lượng chưa
+      // Đơn hàng đã trừ số lượng nếu:
+      // - COD: đã trừ khi tạo đơn (status = PENDING hoặc sau đó)
+      // - VNPay: chỉ trừ khi thanh toán thành công (status = CONFIRMED trở lên)
+      const paymentMethod = currentOrder.paymentMethod;
+      const hasDeductedStock = 
+        (paymentMethod === 'COD' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED') ||
+        (paymentMethod !== 'COD' && oldStatus !== 'PENDING' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED');
+
+      // Cập nhật số lượng tồn kho
+      if (isCancelling && hasDeductedStock) {
+        // Khi hủy đơn hàng đã trừ số lượng: CỘNG LẠI số lượng đã trừ
+        await this.prisma.$transaction(async (tx) => {
+          for (const item of currentOrder.items) {
+            if (item.variantId && item.variant) {
+              await tx.productVariant.update({
+                where: { id: item.variantId },
+                data: {
+                  stockQuantity: {
+                    increment: item.quantity
+                  }
+                }
+              });
+            }
+          }
+        });
+      } else if (isRestoring) {
+        // Khi khôi phục đơn hàng từ CANCELLED: TRỪ LẠI số lượng
+        await this.prisma.$transaction(async (tx) => {
+          for (const item of currentOrder.items) {
+            if (item.variantId && item.variant) {
+              const variant = await tx.productVariant.findUnique({
+                where: { id: item.variantId }
+              });
+              
+              if (variant && variant.stockQuantity < item.quantity) {
+                throw new Error(
+                  `Không thể khôi phục đơn hàng. Biến thể "${item.variant.variantName}" chỉ còn ${variant.stockQuantity} sản phẩm trong kho, cần ${item.quantity}`
+                );
+              }
+
+              await tx.productVariant.update({
+                where: { id: item.variantId },
+                data: {
+                  stockQuantity: {
+                    decrement: item.quantity
+                  }
+                }
+              });
+            }
+          }
+        });
+      }
+
       const order = await this.prisma.order.update({
         where: { id: BigInt(id) },
         data: { status: status as any },

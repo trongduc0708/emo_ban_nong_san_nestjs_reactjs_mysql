@@ -824,6 +824,7 @@ export class AdminService {
         items: {
           include: {
             product: { select: { sellerId: true } },
+            variant: { select: { id: true, variantName: true } },
           },
         },
       },
@@ -841,6 +842,68 @@ export class AdminService {
       if (!hasPermission) {
         throw new Error('Không có quyền cập nhật đơn hàng này');
       }
+    }
+
+    const oldStatus = order.status;
+    const isCancelling = (normalizedStatus === 'CANCELLED' || normalizedStatus === 'REFUNDED') && 
+                         oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED';
+    const isRestoring = (oldStatus === 'CANCELLED' || oldStatus === 'REFUNDED') && 
+                        normalizedStatus !== 'CANCELLED' && normalizedStatus !== 'REFUNDED';
+
+    // Kiểm tra xem đơn hàng đã trừ số lượng chưa
+    // Đơn hàng đã trừ số lượng nếu:
+    // - COD: đã trừ khi tạo đơn (status = PENDING hoặc sau đó)
+    // - VNPay: chỉ trừ khi thanh toán thành công (status = CONFIRMED trở lên)
+    // Vì COD trừ số lượng ngay khi tạo đơn, nên cần kiểm tra paymentMethod
+    const paymentMethod = order.paymentMethod;
+    const hasDeductedStock = 
+      (paymentMethod === 'COD' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED') ||
+      (paymentMethod !== 'COD' && oldStatus !== 'PENDING' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED');
+
+    // Cập nhật số lượng tồn kho
+    if (isCancelling && hasDeductedStock) {
+      // Khi hủy đơn hàng đã trừ số lượng: CỘNG LẠI số lượng đã trừ
+      await this.prisma.$transaction(async (tx) => {
+        for (const item of order.items) {
+          if (item.variantId && item.variant) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: {
+                stockQuantity: {
+                  increment: item.quantity
+                }
+              }
+            });
+          }
+        }
+      });
+    } else if (isRestoring) {
+      // Khi khôi phục đơn hàng từ CANCELLED: TRỪ LẠI số lượng (nếu cần)
+      // Chỉ trừ nếu đơn hàng ban đầu đã trừ (không phải PENDING)
+      await this.prisma.$transaction(async (tx) => {
+        for (const item of order.items) {
+          if (item.variantId && item.variant) {
+            const variant = await tx.productVariant.findUnique({
+              where: { id: item.variantId }
+            });
+            
+            if (variant && variant.stockQuantity < item.quantity) {
+              throw new Error(
+                `Không thể khôi phục đơn hàng. Biến thể "${item.variant.variantName}" chỉ còn ${variant.stockQuantity} sản phẩm trong kho, cần ${item.quantity}`
+              );
+            }
+
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: {
+                stockQuantity: {
+                  decrement: item.quantity
+                }
+              }
+            });
+          }
+        }
+      });
     }
 
     const updated = await this.prisma.order.update({
