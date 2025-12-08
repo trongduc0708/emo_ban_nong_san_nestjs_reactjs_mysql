@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 export default function GoogleCallback() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { setUser } = useAuth()
+  const { setUser, setToken } = useAuth()
 
   useEffect(() => {
     const token = searchParams.get('token')
@@ -28,7 +28,8 @@ export default function GoogleCallback() {
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify(user))
         
-        // Cập nhật auth context
+        // Cập nhật auth context - CẢ user VÀ token
+        setToken(token)
         setUser(user)
         
         toast.success('Đăng nhập Google thành công!')
@@ -42,7 +43,7 @@ export default function GoogleCallback() {
       toast.error('Không nhận được thông tin đăng nhập')
       navigate('/login')
     }
-  }, [searchParams, navigate, setUser])
+  }, [searchParams, navigate, setUser, setToken])
 
   return (
     <div className="min-h-screen flex items-center justify-center">
