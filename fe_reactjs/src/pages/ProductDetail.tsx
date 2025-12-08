@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Star, Heart, Share2, Truck, Shield, RotateCcw, ShoppingCart, Loader2 } from 'lucide-react'
+import { Star, Heart, Share2, Truck, Shield, RotateCcw, ShoppingCart, Loader2, X } from 'lucide-react'
 import { useQuery, useQueryClient } from 'react-query'
 import { productApi } from '@/services/api'
 import { useCart } from '@/contexts/CartContext'
@@ -20,6 +20,8 @@ export default function ProductDetail() {
   const [reviewRating, setReviewRating] = useState(0)
   const [reviewComment, setReviewComment] = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
@@ -35,6 +37,15 @@ export default function ProductDetail() {
   const images: string[] = product?.images?.map((i: any) => i.imageUrl) || []
   const variants: any[] = product?.variants || []
   const displayPrice = variants[selectedVariant]?.price || 0
+
+  // Reset selected image khi product thay đổi
+  React.useEffect(() => {
+    if (images.length > 0) {
+      setSelectedImageIndex(0)
+    }
+  }, [product?.id])
+
+  const currentImage = images[selectedImageIndex] || images[0] || '/uploads/products/placeholder.jpg'
   const reviews = useMemo(() => {
     if (!product?.reviews || !Array.isArray(product.reviews)) {
       return []
@@ -171,24 +182,131 @@ export default function ProductDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Product Images */}
         <div className="space-y-4">
-          <div className="aspect-w-16 aspect-h-12">
+          <div className="aspect-w-16 aspect-h-12 relative">
             <img
-              src={images[0] || '/uploads/products/placeholder.jpg'}
+              src={currentImage}
               alt={product.name}
-              className="w-full h-96 object-cover rounded-lg"
+              className="w-full h-96 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => setIsImageModalOpen(true)}
             />
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))
+                  }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                  aria-label="Ảnh trước"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                  aria-label="Ảnh sau"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {images.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`${product.name} ${index + 1}`}
-                className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-75"
-              />
-            ))}
-          </div>
+          {images.length > 1 && (
+            <div className="grid grid-cols-3 gap-2">
+              {images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={`relative w-full h-24 rounded-lg overflow-hidden border-2 transition-all ${
+                    selectedImageIndex === index
+                      ? 'border-green-500 ring-2 ring-green-200'
+                      : 'border-transparent hover:border-gray-300'
+                  }`}
+                >
+                  <img
+                    src={image}
+                    alt={`${product.name} ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Image Modal/Lightbox */}
+        {isImageModalOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setIsImageModalOpen(false)}
+          >
+            <button
+              onClick={() => setIsImageModalOpen(false)}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+              aria-label="Đóng"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))
+                  }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-colors"
+                  aria-label="Ảnh trước"
+                >
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-colors"
+                  aria-label="Ảnh sau"
+                >
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+            <img
+              src={currentImage}
+              alt={product.name}
+              className="max-w-full max-h-[90vh] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            {images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelectedImageIndex(index)
+                    }}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      selectedImageIndex === index ? 'bg-white w-8' : 'bg-white/50'
+                    }`}
+                    aria-label={`Xem ảnh ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Product Info */}
         <div className="space-y-6">
