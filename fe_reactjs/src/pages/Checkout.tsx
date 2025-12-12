@@ -209,6 +209,7 @@ export default function Checkout() {
         // Kết quả thanh toán sẽ được xử lý khi VNPay callback về
         const response = await paymentApi.createVnpayPayment({
           cartId,
+          addressId: selectedAddressId,
           notes,
           couponCode: appliedCoupon?.code
         })
@@ -227,6 +228,7 @@ export default function Checkout() {
         const response = await paymentApi.processPayment({
           cartId,
           paymentMethod,
+          addressId: selectedAddressId,
           notes,
           couponCode: appliedCoupon?.code
         })

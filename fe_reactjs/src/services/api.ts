@@ -189,6 +189,7 @@ export const paymentApi = {
   processPayment: (data: {
     cartId: number
     paymentMethod?: 'COD' | 'VNPAY'
+    addressId?: number
     notes?: string
     couponCode?: string
   }) => api.post('/payment/process', data),
@@ -202,6 +203,7 @@ export const paymentApi = {
   // Tạo thanh toán VNPAY
   createVnpayPayment: (data: {
     cartId: number
+    addressId?: number
     notes?: string
     couponCode?: string
   }) => api.post('/payment/vnpay/create', data),

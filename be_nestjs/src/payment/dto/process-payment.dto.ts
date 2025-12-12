@@ -10,6 +10,11 @@ export class ProcessPaymentDto {
   paymentMethod?: 'COD' | 'VNPAY';
 
   @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  addressId?: number;
+
+  @IsOptional()
   @IsString()
   notes?: string;
 

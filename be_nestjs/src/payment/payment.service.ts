@@ -13,7 +13,7 @@ export class PaymentService {
   ) {}
 
   async processPayment(userId: number, dto: ProcessPaymentDto) {
-    const { cartId, paymentMethod = 'COD', notes, couponCode } = dto;
+    const { cartId, paymentMethod = 'COD', notes, couponCode, addressId } = dto;
 
     // Lấy giỏ hàng và kiểm tra quyền sở hữu
     const cart = await this.prisma.cart.findFirst({
@@ -79,24 +79,63 @@ export class PaymentService {
     const shippingFee = 20000; // Phí vận chuyển cố định
     const totalAmount = subtotalAmount - discountAmount + shippingFee;
 
+    // Lấy địa chỉ giao hàng nếu có addressId
+    let shippingAddressSnapshot = null;
+    console.log('🔍 processPayment - addressId:', addressId, 'userId:', userId);
+    if (addressId) {
+      const address = await this.prisma.address.findFirst({
+        where: {
+          id: BigInt(addressId),
+          userId: BigInt(userId),
+        },
+      });
+      console.log('🔍 processPayment - address found:', address);
+      if (address) {
+        shippingAddressSnapshot = {
+          recipientName: address.recipientName,
+          phone: address.phone,
+          province: address.province,
+          district: address.district,
+          ward: address.ward,
+          addressLine: address.addressLine,
+        };
+        console.log('🔍 processPayment - shippingAddressSnapshot:', shippingAddressSnapshot);
+      } else {
+        console.log('⚠️ processPayment - Address not found for addressId:', addressId);
+      }
+    } else {
+      console.log('⚠️ processPayment - No addressId provided');
+    }
+
     // Bắt đầu transaction để đảm bảo tính nhất quán
     return await this.prisma.$transaction(async (tx) => {
       // Tạo đơn hàng
+      const orderData: any = {
+        orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        userId: BigInt(userId),
+        ...(couponId && { couponId: couponId }),
+        status: 'PENDING',
+        paymentMethod: paymentMethod,
+        paymentStatus: paymentMethod === 'COD' ? 'UNPAID' : 'UNPAID',
+        subtotalAmount: subtotalAmount,
+        discountAmount: discountAmount,
+        shippingFee: shippingFee,
+        totalAmount: totalAmount,
+        notes,
+      };
+      
+      if (shippingAddressSnapshot) {
+        orderData.shippingAddressSnapshot = shippingAddressSnapshot;
+        console.log('✅ processPayment - Adding shippingAddressSnapshot to order');
+      } else {
+        console.log('⚠️ processPayment - No shippingAddressSnapshot to add');
+      }
+      
       const order = await tx.order.create({
-        data: {
-          orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          userId: BigInt(userId),
-          ...(couponId && { couponId: couponId }),
-          status: 'PENDING',
-          paymentMethod: paymentMethod,
-          paymentStatus: paymentMethod === 'COD' ? 'UNPAID' : 'UNPAID',
-          subtotalAmount: subtotalAmount,
-          discountAmount: discountAmount,
-          shippingFee: shippingFee,
-          totalAmount: totalAmount,
-          notes
-        } as any
+        data: orderData,
       });
+      
+      console.log('🔍 processPayment - Order created with shippingAddressSnapshot:', order.shippingAddressSnapshot ? 'YES' : 'NO');
 
       // Tạo order items và TRỪ SỐ LƯỢNG KHO
       for (const item of cart.items) {
@@ -172,7 +211,7 @@ export class PaymentService {
   async createVnpayPayment(userId: number, dto: ProcessPaymentDto, ipAddr: string) {
     console.log('🔍 createVnpayPayment called with:', { userId, dto, ipAddr });
     
-    const { cartId, notes, couponCode } = dto;
+    const { cartId, notes, couponCode, addressId } = dto;
 
     // Lấy giỏ hàng và kiểm tra quyền sở hữu
     const cart = await this.prisma.cart.findFirst({
@@ -235,22 +274,61 @@ export class PaymentService {
     const shippingFee = 20000; // Phí vận chuyển cố định
     const totalAmount = subtotalAmount - discountAmount + shippingFee;
 
+    // Lấy địa chỉ giao hàng nếu có addressId
+    let shippingAddressSnapshot = null;
+    console.log('🔍 createVnpayPayment - addressId:', addressId, 'userId:', userId);
+    if (addressId) {
+      const address = await this.prisma.address.findFirst({
+        where: {
+          id: BigInt(addressId),
+          userId: BigInt(userId),
+        },
+      });
+      console.log('🔍 createVnpayPayment - address found:', address);
+      if (address) {
+        shippingAddressSnapshot = {
+          recipientName: address.recipientName,
+          phone: address.phone,
+          province: address.province,
+          district: address.district,
+          ward: address.ward,
+          addressLine: address.addressLine,
+        };
+        console.log('🔍 createVnpayPayment - shippingAddressSnapshot:', shippingAddressSnapshot);
+      } else {
+        console.log('⚠️ createVnpayPayment - Address not found for addressId:', addressId);
+      }
+    } else {
+      console.log('⚠️ createVnpayPayment - No addressId provided');
+    }
+
     // Tạo đơn hàng với status PENDING
+    const orderData: any = {
+      orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      userId: BigInt(userId),
+      ...(couponId && { couponId: couponId }),
+      status: 'PENDING',
+      paymentMethod: 'VNPAY',
+      paymentStatus: 'UNPAID',
+      subtotalAmount: subtotalAmount,
+      discountAmount: discountAmount,
+      shippingFee: shippingFee,
+      totalAmount: totalAmount,
+      notes,
+    };
+    
+    if (shippingAddressSnapshot) {
+      orderData.shippingAddressSnapshot = shippingAddressSnapshot;
+      console.log('✅ createVnpayPayment - Adding shippingAddressSnapshot to order');
+    } else {
+      console.log('⚠️ createVnpayPayment - No shippingAddressSnapshot to add');
+    }
+    
     const order = await this.prisma.order.create({
-      data: {
-        orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        userId: BigInt(userId),
-        ...(couponId && { couponId: couponId }),
-        status: 'PENDING',
-        paymentMethod: 'VNPAY',
-        paymentStatus: 'UNPAID',
-        subtotalAmount: subtotalAmount,
-        discountAmount: discountAmount,
-        shippingFee: shippingFee,
-        totalAmount: totalAmount,
-        notes
-      } as any
+      data: orderData,
     });
+    
+    console.log('🔍 createVnpayPayment - Order created with shippingAddressSnapshot:', order.shippingAddressSnapshot ? 'YES' : 'NO');
 
     // Tạo order items
     for (const item of cart.items) {

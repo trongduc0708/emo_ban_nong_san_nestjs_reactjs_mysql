@@ -114,6 +114,8 @@ export default function AdminOrders() {
   const handleViewOrder = async (order: Order) => {
     try {
       const response = await adminApi.getOrder(parseInt(order.id))
+      console.log('Order detail response:', response.data)
+      console.log('Shipping address snapshot:', response.data.shippingAddressSnapshot)
       setSelectedOrder(response.data)
       setShowDetailModal(true)
     } catch (error) {

@@ -24,6 +24,9 @@ interface OrderDetailModalProps {
 export default function OrderDetailModal({ order, onClose, onStatusChange, onPaymentStatusChange }: OrderDetailModalProps) {
   if (!order) return null
 
+  // Debug: Log shippingAddressSnapshot để kiểm tra
+  console.log('Order shippingAddressSnapshot:', order.shippingAddressSnapshot)
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'COMPLETED':
@@ -166,13 +169,14 @@ export default function OrderDetailModal({ order, onClose, onStatusChange, onPay
                   Địa chỉ giao hàng
                 </h3>
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  {order.shippingAddressSnapshot ? (
-                    <div className="space-y-1">
-                      <div><strong>Người nhận:</strong> {order.shippingAddressSnapshot.recipientName}</div>
-                      <div><strong>Số điện thoại:</strong> {order.shippingAddressSnapshot.phone}</div>
-                      <div><strong>Địa chỉ:</strong> {order.shippingAddressSnapshot.address}</div>
-                      <div><strong>Tỉnh/Thành phố:</strong> {order.shippingAddressSnapshot.province}</div>
-                      <div><strong>Quận/Huyện:</strong> {order.shippingAddressSnapshot.district}</div>
+                  {order.shippingAddressSnapshot && typeof order.shippingAddressSnapshot === 'object' ? (
+                    <div className="space-y-1 text-sm">
+                      <div><strong>Người nhận:</strong> {order.shippingAddressSnapshot.recipientName || 'N/A'}</div>
+                      <div><strong>Số điện thoại:</strong> {order.shippingAddressSnapshot.phone || 'N/A'}</div>
+                      <div><strong>Địa chỉ:</strong> {order.shippingAddressSnapshot.addressLine || 'N/A'}</div>
+                      <div><strong>Phường/Xã:</strong> {order.shippingAddressSnapshot.ward || 'N/A'}</div>
+                      <div><strong>Quận/Huyện:</strong> {order.shippingAddressSnapshot.district || 'N/A'}</div>
+                      <div><strong>Tỉnh/Thành phố:</strong> {order.shippingAddressSnapshot.province || 'N/A'}</div>
                     </div>
                   ) : (
                     <p className="text-gray-500">Không có thông tin địa chỉ</p>

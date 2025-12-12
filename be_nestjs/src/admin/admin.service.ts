@@ -1221,7 +1221,20 @@ export class AdminService {
       discountAmount: Number(order.discountAmount),
       shippingFee: Number(order.shippingFee),
       totalAmount: Number(order.totalAmount),
-      shippingAddressSnapshot: order.shippingAddressSnapshot,
+      shippingAddressSnapshot: (() => {
+        if (!order.shippingAddressSnapshot) {
+          return null;
+        }
+        try {
+          if (typeof order.shippingAddressSnapshot === 'string') {
+            return JSON.parse(order.shippingAddressSnapshot);
+          }
+          return order.shippingAddressSnapshot;
+        } catch (error) {
+          console.error('Error parsing shippingAddressSnapshot:', error);
+          return null;
+        }
+      })(),
       notes: order.notes,
       createdAt: order.createdAt.toISOString(),
       updatedAt: order.updatedAt.toISOString(),
