@@ -255,10 +255,11 @@ export class OrdersService {
 
       const oldStatus = currentOrder.status;
       const newStatus = status.toUpperCase();
-      const isCancelling = (newStatus === 'CANCELLED' || newStatus === 'REFUNDED') && 
-                           oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED';
-      const isRestoring = (oldStatus === 'CANCELLED' || oldStatus === 'REFUNDED') && 
-                          newStatus !== 'CANCELLED' && newStatus !== 'REFUNDED';
+      // Hoàn hàng (RETURNED) cũng giống như hủy (CANCELLED) và hoàn tiền (REFUNDED) - cần restore stock
+      const isCancelling = (newStatus === 'CANCELLED' || newStatus === 'REFUNDED' || newStatus === 'RETURNED') && 
+                           oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED' && oldStatus !== 'RETURNED';
+      const isRestoring = (oldStatus === 'CANCELLED' || oldStatus === 'REFUNDED' || oldStatus === 'RETURNED') && 
+                          newStatus !== 'CANCELLED' && newStatus !== 'REFUNDED' && newStatus !== 'RETURNED';
 
       // Kiểm tra xem đơn hàng đã trừ số lượng chưa
       // Đơn hàng đã trừ số lượng nếu:
@@ -266,8 +267,8 @@ export class OrdersService {
       // - VNPay: chỉ trừ khi thanh toán thành công (status = CONFIRMED trở lên)
       const paymentMethod = currentOrder.paymentMethod;
       const hasDeductedStock = 
-        (paymentMethod === 'COD' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED') ||
-        (paymentMethod !== 'COD' && oldStatus !== 'PENDING' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED');
+        (paymentMethod === 'COD' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED' && oldStatus !== 'RETURNED') ||
+        (paymentMethod !== 'COD' && oldStatus !== 'PENDING' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED' && oldStatus !== 'RETURNED');
 
       // Cập nhật số lượng tồn kho
       if (isCancelling && hasDeductedStock) {

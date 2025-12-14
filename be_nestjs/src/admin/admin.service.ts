@@ -305,11 +305,15 @@ export class AdminService {
     }
     
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } }
-      ];
+      const searchTerm = search.trim();
+      if (searchTerm) {
+        // MySQL không hỗ trợ mode: 'insensitive', collation utf8mb4_unicode_ci tự động case-insensitive
+        where.OR = [
+          { name: { contains: searchTerm } },
+          { description: { contains: searchTerm } },
+          { sku: { contains: searchTerm } }
+        ];
+      }
     }
     if (category) {
       where.categoryId = parseInt(category);
@@ -606,13 +610,16 @@ export class AdminService {
     }
 
     if (params?.search) {
-      const keyword = params.search;
-      where.OR = [
-        { orderCode: { contains: keyword, mode: 'insensitive' } },
-        { user: { fullName: { contains: keyword, mode: 'insensitive' } } },
-        { user: { email: { contains: keyword, mode: 'insensitive' } } },
-        { user: { phone: { contains: keyword, mode: 'insensitive' } } },
-      ];
+      const keyword = params.search.trim();
+      if (keyword) {
+        // MySQL không hỗ trợ mode: 'insensitive', collation utf8mb4_unicode_ci tự động case-insensitive
+        where.OR = [
+          { orderCode: { contains: keyword } },
+          { user: { fullName: { contains: keyword } } },
+          { user: { email: { contains: keyword } } },
+          { user: { phone: { contains: keyword } } },
+        ];
+      }
     }
 
     if (isSeller) {
@@ -808,6 +815,7 @@ export class AdminService {
       'COMPLETED',
       'CANCELLED',
       'REFUNDED',
+      'RETURNED',
     ];
     const normalizedStatus = String(status || '').toUpperCase() as OrderStatus;
 
@@ -845,10 +853,11 @@ export class AdminService {
     }
 
     const oldStatus = order.status;
-    const isCancelling = (normalizedStatus === 'CANCELLED' || normalizedStatus === 'REFUNDED') && 
-                         oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED';
-    const isRestoring = (oldStatus === 'CANCELLED' || oldStatus === 'REFUNDED') && 
-                        normalizedStatus !== 'CANCELLED' && normalizedStatus !== 'REFUNDED';
+    // Hoàn hàng (RETURNED) cũng giống như hủy (CANCELLED) và hoàn tiền (REFUNDED) - cần restore stock
+    const isCancelling = (normalizedStatus === 'CANCELLED' || normalizedStatus === 'REFUNDED' || normalizedStatus === 'RETURNED') && 
+                         oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED' && oldStatus !== 'RETURNED';
+    const isRestoring = (oldStatus === 'CANCELLED' || oldStatus === 'REFUNDED' || oldStatus === 'RETURNED') && 
+                        normalizedStatus !== 'CANCELLED' && normalizedStatus !== 'REFUNDED' && normalizedStatus !== 'RETURNED';
 
     // Kiểm tra xem đơn hàng đã trừ số lượng chưa
     // Đơn hàng đã trừ số lượng nếu:
@@ -857,8 +866,8 @@ export class AdminService {
     // Vì COD trừ số lượng ngay khi tạo đơn, nên cần kiểm tra paymentMethod
     const paymentMethod = order.paymentMethod;
     const hasDeductedStock = 
-      (paymentMethod === 'COD' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED') ||
-      (paymentMethod !== 'COD' && oldStatus !== 'PENDING' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED');
+      (paymentMethod === 'COD' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED' && oldStatus !== 'RETURNED') ||
+      (paymentMethod !== 'COD' && oldStatus !== 'PENDING' && oldStatus !== 'CANCELLED' && oldStatus !== 'REFUNDED' && oldStatus !== 'RETURNED');
 
     // Cập nhật số lượng tồn kho
     if (isCancelling && hasDeductedStock) {

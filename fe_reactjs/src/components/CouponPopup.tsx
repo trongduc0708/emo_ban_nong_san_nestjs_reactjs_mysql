@@ -19,8 +19,8 @@ interface Coupon {
 
 export default function CouponPopup() {
   const [show, setShow] = useState(false)
-  const [coupon, setCoupon] = useState<Coupon | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [coupons, setCoupons] = useState<Coupon[]>([])
+  const [copiedCodes, setCopiedCodes] = useState<Set<number>>(new Set())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -35,8 +35,8 @@ export default function CouponPopup() {
       const result = await response.json()
 
       if (result.success && result.data?.coupons?.length > 0) {
-        // Lấy coupon đầu tiên
-        setCoupon(result.data.coupons[0])
+        // Lấy tất cả coupons
+        setCoupons(result.data.coupons)
         setShow(true)
       }
     } catch (error) {
@@ -47,34 +47,34 @@ export default function CouponPopup() {
     }
   }
 
-  const handleCopyCode = () => {
-    if (coupon?.code) {
-      navigator.clipboard.writeText(coupon.code)
-      setCopied(true)
-      toast.success('Đã sao chép mã khuyến mãi!')
-      setTimeout(() => setCopied(false), 2000)
-    }
+  const handleCopyCode = (code: string, couponId: number) => {
+    navigator.clipboard.writeText(code)
+    setCopiedCodes(prev => new Set(prev).add(couponId))
+    toast.success('Đã sao chép mã khuyến mãi!')
+    setTimeout(() => {
+      setCopiedCodes(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(couponId)
+        return newSet
+      })
+    }, 2000)
   }
 
   const handleClose = () => {
     setShow(false)
   }
 
-  if (loading || !show || !coupon) {
+  if (loading || !show || coupons.length === 0) {
     return null
   }
 
-  const discountText = coupon.type === 'PERCENT' 
-    ? `Giảm ${coupon.value}%` 
-    : `Giảm ${coupon.value.toLocaleString('vi-VN')}₫`
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <Card className="relative max-w-md w-full p-6 animate-in fade-in zoom-in duration-300">
+      <Card className="relative max-w-2xl w-full max-h-[90vh] p-6 animate-in fade-in zoom-in duration-300 overflow-y-auto">
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
           aria-label="Đóng"
         >
           <X className="w-5 h-5" />
@@ -91,51 +91,71 @@ export default function CouponPopup() {
           <p className="text-gray-600">
             Áp dụng ngay để nhận ưu đãi hấp dẫn
           </p>
-        </div>
-
-        {/* Coupon Code */}
-        <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-lg p-6 mb-4 text-white text-center">
-          <div className="text-sm mb-2 opacity-90">Mã khuyến mãi của bạn</div>
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <code className="text-3xl font-bold tracking-wider">
-              {coupon.code}
-            </code>
-            <button
-              onClick={handleCopyCode}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-              aria-label="Sao chép mã"
-            >
-              {copied ? (
-                <Check className="w-5 h-5" />
-              ) : (
-                <Copy className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-          <div className="text-lg font-semibold">
-            {discountText}
-          </div>
-          {coupon.minOrderAmount && (
-            <div className="text-sm mt-2 opacity-90">
-              Áp dụng cho đơn hàng từ {coupon.minOrderAmount.toLocaleString('vi-VN')}₫
-            </div>
+          {coupons.length > 0 && (
+            <p className="text-sm text-gray-500 mt-2">
+              {coupons.length} mã khuyến mãi đang áp dụng
+            </p>
           )}
         </div>
 
-        {/* Info */}
-        <div className="space-y-2 text-sm text-gray-600 mb-6">
-          {coupon.endsAt && (
-            <div className="flex items-center justify-center gap-2">
-              <span>⏰ Hết hạn:</span>
-              <span className="font-medium">
-                {new Date(coupon.endsAt).toLocaleDateString('vi-VN', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric'
-                })}
-              </span>
-            </div>
-          )}
+        {/* Coupons List */}
+        <div className="space-y-4 mb-6">
+          {coupons.map((coupon) => {
+            const discountText = coupon.type === 'PERCENT' 
+              ? `Giảm ${coupon.value}%` 
+              : `Giảm ${coupon.value.toLocaleString('vi-VN')}₫`
+            const isCopied = copiedCodes.has(coupon.id)
+
+            return (
+              <div
+                key={coupon.id}
+                className="bg-gradient-to-r from-green-500 to-blue-600 rounded-lg p-5 text-white relative"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <code className="text-2xl font-bold tracking-wider">
+                        {coupon.code}
+                      </code>
+                      <button
+                        onClick={() => handleCopyCode(coupon.code, coupon.id)}
+                        className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                        aria-label="Sao chép mã"
+                      >
+                        {isCopied ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="text-lg font-semibold mb-2">
+                      {discountText}
+                    </div>
+                    {coupon.minOrderAmount && (
+                      <div className="text-sm opacity-90 mb-1">
+                        Áp dụng cho đơn hàng từ {coupon.minOrderAmount.toLocaleString('vi-VN')}₫
+                      </div>
+                    )}
+                    {coupon.endsAt && (
+                      <div className="text-sm opacity-90">
+                        ⏰ Hết hạn: {new Date(coupon.endsAt).toLocaleDateString('vi-VN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}
+                      </div>
+                    )}
+                    {!coupon.endsAt && (
+                      <div className="text-sm opacity-90">
+                        ⏰ Không giới hạn thời gian
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
 
         {/* Actions */}

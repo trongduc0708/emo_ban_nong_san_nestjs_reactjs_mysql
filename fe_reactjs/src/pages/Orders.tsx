@@ -38,6 +38,7 @@ const statusConfig = {
   COMPLETED: { label: 'Hoàn thành', color: 'text-green-600 bg-green-100', icon: CheckCircle },
   CANCELLED: { label: 'Đã hủy', color: 'text-red-600 bg-red-100', icon: XCircle },
   REFUNDED: { label: 'Đã hoàn tiền', color: 'text-gray-600 bg-gray-100', icon: XCircle },
+  RETURNED: { label: 'Đã hoàn hàng', color: 'text-orange-600 bg-orange-100', icon: XCircle },
 }
 
 export default function Orders() {

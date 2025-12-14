@@ -69,6 +69,12 @@ export default function AdminDashboard() {
         return 'text-blue-600 bg-blue-100'
       case 'PENDING':
         return 'text-yellow-600 bg-yellow-100'
+      case 'CANCELLED':
+        return 'text-red-600 bg-red-100'
+      case 'REFUNDED':
+        return 'text-gray-600 bg-gray-100'
+      case 'RETURNED':
+        return 'text-orange-600 bg-orange-100'
       default:
         return 'text-gray-600 bg-gray-100'
     }
@@ -82,6 +88,12 @@ export default function AdminDashboard() {
         return 'Đang giao'
       case 'PENDING':
         return 'Chờ xử lý'
+      case 'CANCELLED':
+        return 'Đã hủy'
+      case 'REFUNDED':
+        return 'Đã hoàn tiền'
+      case 'RETURNED':
+        return 'Đã hoàn hàng'
       default:
         return status
     }
