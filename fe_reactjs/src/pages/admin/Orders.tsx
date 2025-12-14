@@ -176,6 +176,10 @@ export default function AdminOrders() {
         return 'text-yellow-600 bg-yellow-100'
       case 'CANCELLED':
         return 'text-red-600 bg-red-100'
+      case 'REFUNDED':
+        return 'text-gray-600 bg-gray-100'
+      case 'RETURNED':
+        return 'text-orange-600 bg-orange-100'
       default:
         return 'text-gray-600 bg-gray-100'
     }
@@ -191,6 +195,10 @@ export default function AdminOrders() {
         return 'Chờ xử lý'
       case 'CANCELLED':
         return 'Đã hủy'
+      case 'REFUNDED':
+        return 'Đã hoàn tiền'
+      case 'RETURNED':
+        return 'Đã hoàn hàng'
       default:
         return status
     }
@@ -205,6 +213,10 @@ export default function AdminOrders() {
       case 'PENDING':
         return Clock
       case 'CANCELLED':
+        return XCircle
+      case 'REFUNDED':
+        return XCircle
+      case 'RETURNED':
         return XCircle
       default:
         return Package
@@ -240,8 +252,9 @@ export default function AdminOrders() {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.orderCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.email.toLowerCase().includes(searchTerm.toLowerCase())
+      order.user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.user?.phone?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesFilter = filterStatus === 'all' || order.status === filterStatus
     return matchesSearch && matchesFilter
   })
@@ -335,9 +348,13 @@ export default function AdminOrders() {
               >
                 <option value="all">Tất cả trạng thái</option>
                 <option value="PENDING">Chờ xử lý</option>
+                <option value="CONFIRMED">Đã xác nhận</option>
+                <option value="PREPARING">Đang chuẩn bị</option>
                 <option value="SHIPPING">Đang giao</option>
                 <option value="COMPLETED">Hoàn thành</option>
                 <option value="CANCELLED">Đã hủy</option>
+                <option value="REFUNDED">Đã hoàn tiền</option>
+                <option value="RETURNED">Đã hoàn hàng</option>
               </select>
               <Button variant="outline" className="flex items-center space-x-2">
                 <Filter className="w-4 h-4" />

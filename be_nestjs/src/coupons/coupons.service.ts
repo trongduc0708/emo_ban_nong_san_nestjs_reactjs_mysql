@@ -16,10 +16,12 @@ export class CouponsService {
 
     const where: any = {};
     if (search) {
-      where.OR = [
-        { code: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
-      ];
+      const searchTerm = search.trim();
+      if (searchTerm) {
+        // MySQL không hỗ trợ mode: 'insensitive', collation utf8mb4_unicode_ci tự động case-insensitive
+        // Model Coupon chỉ có trường 'code', không có 'description'
+        where.code = { contains: searchTerm };
+      }
     }
     if (status) {
       where.isActive = status === 'active';
@@ -72,27 +74,44 @@ export class CouponsService {
   async getActiveCoupons() {
     try {
       const now = new Date();
-      const coupons = await this.prisma.coupon.findMany({
+      console.log('🔍 getActiveCoupons - Current time:', now.toISOString());
+      
+      // Lấy tất cả coupons active trước, sau đó filter ở application level để đảm bảo logic chính xác
+      const allCoupons = await this.prisma.coupon.findMany({
         where: {
-          isActive: true,
-          AND: [
-            {
-              OR: [
-                { startsAt: null },
-                { startsAt: { lte: now } }
-              ]
-            },
-            {
-              OR: [
-                { endsAt: null },
-                { endsAt: { gte: now } }
-              ]
-            }
-          ]
+          isActive: true
         },
-        orderBy: { createdAt: 'desc' },
-        take: 5
+        orderBy: { createdAt: 'desc' }
       });
+
+      console.log('🔍 getActiveCoupons - Total active coupons found:', allCoupons.length);
+
+      // Filter coupons theo điều kiện:
+      // 1. isActive = true (đã filter ở query)
+      // 2. startsAt phải null HOẶC <= now (đã bắt đầu)
+      // 3. endsAt phải null HOẶC >= now (chưa hết hạn)
+      const validCoupons = allCoupons.filter(coupon => {
+        const startsAtValid = !coupon.startsAt || coupon.startsAt <= now;
+        const endsAtValid = !coupon.endsAt || coupon.endsAt >= now;
+        
+        const isValid = startsAtValid && endsAtValid;
+        
+        if (!isValid) {
+          console.log(`⚠️ Coupon ${coupon.code} filtered out:`, {
+            startsAt: coupon.startsAt?.toISOString(),
+            endsAt: coupon.endsAt?.toISOString(),
+            startsAtValid,
+            endsAtValid
+          });
+        }
+        
+        return isValid;
+      });
+
+      console.log('🔍 getActiveCoupons - Valid coupons after filtering:', validCoupons.length);
+
+      // Lấy 5 coupon mới nhất
+      const coupons = validCoupons.slice(0, 5);
 
       const processedCoupons = coupons.map(coupon => ({
         ...coupon,
@@ -103,6 +122,8 @@ export class CouponsService {
         startsAt: coupon.startsAt ? coupon.startsAt.toISOString() : null,
         endsAt: coupon.endsAt ? coupon.endsAt.toISOString() : null
       }));
+
+      console.log('✅ getActiveCoupons - Returning coupons:', processedCoupons.map(c => c.code));
 
       return {
         success: true,
@@ -321,17 +342,28 @@ export class CouponsService {
    */
   async validateCoupon(code: string, userId: number, orderAmount: number) {
     try {
+      const now = new Date();
       const coupon = await this.prisma.coupon.findFirst({
         where: {
           code: code,
-          isActive: true,
-          startsAt: { lte: new Date() },
-          endsAt: { gte: new Date() }
+          isActive: true
         }
       });
 
       if (!coupon) {
-        throw new Error('Coupon không hợp lệ hoặc đã hết hạn');
+        throw new Error('Coupon không tồn tại hoặc đã bị vô hiệu hóa');
+      }
+
+      // Kiểm tra thời gian hiệu lực
+      const startsAtValid = !coupon.startsAt || coupon.startsAt <= now;
+      const endsAtValid = !coupon.endsAt || coupon.endsAt >= now;
+
+      if (!startsAtValid) {
+        throw new Error('Coupon chưa đến thời gian áp dụng');
+      }
+
+      if (!endsAtValid) {
+        throw new Error('Coupon đã hết hạn');
       }
 
       // Check usage limit

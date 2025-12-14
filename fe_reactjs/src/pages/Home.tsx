@@ -8,6 +8,7 @@ import { productApi } from '@/services/api'
 import ProductSection from '@/components/ProductSection'
 import { useCart } from '@/contexts/CartContext'
 import CouponPopup from '@/components/CouponPopup'
+import CouponSection from '@/components/CouponSection'
 import toast from 'react-hot-toast'
 
 export default function Home() {
@@ -230,6 +231,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Coupons Section */}
+      <CouponSection />
 
       {/* Featured Products Section */}
       <ProductSection

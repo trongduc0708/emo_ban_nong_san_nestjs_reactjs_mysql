@@ -14,36 +14,75 @@ export class ProductsService {
     minPrice?: string;
     maxPrice?: string;
   }) {
-    const page = Math.max(parseInt(params.page || '1', 10), 1);
-    const limit = Math.min(Math.max(parseInt(params.limit || '12', 10), 1), 100);
+    try {
+      const page = Math.max(parseInt(params.page || '1', 10), 1);
+      const limit = Math.min(Math.max(parseInt(params.limit || '12', 10), 1), 100);
 
-    const where: any = { isActive: true };
-    if (params.categorySlug) where.category = { slug: params.categorySlug };
-    if (params.search) where.name = { contains: params.search, mode: 'insensitive' };
-    if (params.minPrice || params.maxPrice) {
-      where.variants = {
-        some: {
-          price: {
-            ...(params.minPrice ? { gte: parseFloat(params.minPrice) } : {}),
-            ...(params.maxPrice ? { lte: parseFloat(params.maxPrice) } : {}),
+      const where: any = { isActive: true };
+      
+      // Xử lý tìm kiếm - MySQL không hỗ trợ mode: 'insensitive'
+      // MySQL với collation utf8mb4_unicode_ci sẽ tự động case-insensitive
+      if (params.search) {
+        const searchTerm = params.search.trim();
+        if (searchTerm) {
+          // Tìm kiếm trong name và description
+          where.OR = [
+            { name: { contains: searchTerm } },
+            { description: { contains: searchTerm } },
+          ];
+        }
+      }
+      
+      // Xử lý category - thêm vào AND nếu đã có OR
+      if (params.categorySlug) {
+        if (where.OR) {
+          where.AND = [
+            { OR: where.OR },
+            { category: { slug: params.categorySlug } }
+          ];
+          delete where.OR;
+        } else {
+          where.category = { slug: params.categorySlug };
+        }
+      }
+      
+      // Xử lý price filter
+      if (params.minPrice || params.maxPrice) {
+        const priceCondition: any = {
+          some: {
+            price: {
+              ...(params.minPrice ? { gte: parseFloat(params.minPrice) } : {}),
+              ...(params.maxPrice ? { lte: parseFloat(params.maxPrice) } : {}),
+            },
           },
+        };
+        
+        if (where.AND) {
+          where.AND.push({ variants: priceCondition });
+        } else if (where.OR) {
+          where.AND = [
+            { OR: where.OR },
+            { variants: priceCondition }
+          ];
+          delete where.OR;
+        } else {
+          where.variants = priceCondition;
+        }
+      }
+
+      const total = await this.prisma.product.count({ where });
+
+      const products = await this.prisma.product.findMany({
+        where,
+        include: {
+          category: true,
+          images: { orderBy: { position: 'asc' } },
+          variants: { where: { isActive: true }, orderBy: { price: 'asc' } },
         },
-      };
-    }
-
-    const total = await this.prisma.product.count({ where });
-
-    const products = await this.prisma.product.findMany({
-      where,
-      include: {
-        category: true,
-        images: { orderBy: { position: 'asc' } },
-        variants: { where: { isActive: true }, orderBy: { price: 'asc' } },
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
 
     const data = products.map((p) => ({
       ...p,
@@ -66,20 +105,25 @@ export class ProductsService {
       })),
     }));
 
-    return {
-      success: true,
-      data: {
-        products: data,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-          hasNextPage: page * limit < total,
-          hasPrevPage: page > 1,
+      return {
+        success: true,
+        data: {
+          products: data,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+            hasNextPage: page * limit < total,
+            hasPrevPage: page > 1,
+          },
         },
-      },
-    };
+      };
+    } catch (error: any) {
+      console.error('Error in products.list:', error);
+      console.error('Search params:', params);
+      throw new Error(`Lỗi khi tìm kiếm sản phẩm: ${error.message || 'Unknown error'}`);
+    }
   }
 
   async detail(id: number) {

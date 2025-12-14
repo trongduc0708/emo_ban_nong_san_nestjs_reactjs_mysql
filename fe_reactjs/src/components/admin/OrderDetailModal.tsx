@@ -37,6 +37,10 @@ export default function OrderDetailModal({ order, onClose, onStatusChange, onPay
         return 'text-yellow-600 bg-yellow-100'
       case 'CANCELLED':
         return 'text-red-600 bg-red-100'
+      case 'REFUNDED':
+        return 'text-gray-600 bg-gray-100'
+      case 'RETURNED':
+        return 'text-orange-600 bg-orange-100'
       default:
         return 'text-gray-600 bg-gray-100'
     }
@@ -52,6 +56,10 @@ export default function OrderDetailModal({ order, onClose, onStatusChange, onPay
         return 'Chờ xử lý'
       case 'CANCELLED':
         return 'Đã hủy'
+      case 'REFUNDED':
+        return 'Đã hoàn tiền'
+      case 'RETURNED':
+        return 'Đã hoàn hàng'
       default:
         return status
     }
@@ -66,6 +74,10 @@ export default function OrderDetailModal({ order, onClose, onStatusChange, onPay
       case 'PENDING':
         return Clock
       case 'CANCELLED':
+        return XCircle
+      case 'REFUNDED':
+        return XCircle
+      case 'RETURNED':
         return XCircle
       default:
         return Package
@@ -133,9 +145,13 @@ export default function OrderDetailModal({ order, onClose, onStatusChange, onPay
                       className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     >
                       <option value="PENDING">Chờ xử lý</option>
+                      <option value="CONFIRMED">Đã xác nhận</option>
+                      <option value="PREPARING">Đang chuẩn bị</option>
                       <option value="SHIPPING">Đang giao</option>
                       <option value="COMPLETED">Hoàn thành</option>
                       <option value="CANCELLED">Đã hủy</option>
+                      <option value="REFUNDED">Đã hoàn tiền</option>
+                      <option value="RETURNED">Đã hoàn hàng</option>
                     </select>
                   )}
                 </div>

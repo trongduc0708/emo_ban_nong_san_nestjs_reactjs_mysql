@@ -256,7 +256,8 @@ export default function AdminReports() {
       'SHIPPING': 'Đang giao',
       'COMPLETED': 'Hoàn thành',
       'CANCELLED': 'Đã hủy',
-      'REFUNDED': 'Đã hoàn tiền'
+      'REFUNDED': 'Đã hoàn tiền',
+      'RETURNED': 'Đã hoàn hàng'
     }
     return statusMap[status] || status
   }
@@ -267,7 +268,8 @@ export default function AdminReports() {
       'SHIPPING': 'bg-blue-100 text-blue-700',
       'PENDING': 'bg-yellow-100 text-yellow-700',
       'CANCELLED': 'bg-red-100 text-red-700',
-      'REFUNDED': 'bg-gray-100 text-gray-700'
+      'REFUNDED': 'bg-gray-100 text-gray-700',
+      'RETURNED': 'bg-orange-100 text-orange-700'
     }
     return colorMap[status] || 'bg-gray-100 text-gray-700'
   }
