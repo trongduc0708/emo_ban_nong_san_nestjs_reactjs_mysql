@@ -111,7 +111,7 @@ export class PaymentService {
     return await this.prisma.$transaction(async (tx) => {
       // Tạo đơn hàng
       const orderData: any = {
-        orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        orderCode: `ORD${Date.now()}`,
         userId: BigInt(userId),
         ...(couponId && { couponId: couponId }),
         status: 'PENDING',
@@ -304,7 +304,7 @@ export class PaymentService {
 
     // Tạo đơn hàng với status PENDING
     const orderData: any = {
-      orderCode: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      orderCode: `ORD${Date.now()}`,
       userId: BigInt(userId),
       ...(couponId && { couponId: couponId }),
       status: 'PENDING',
@@ -353,7 +353,7 @@ export class PaymentService {
     }
 
     // Tạo VNPay payment URL
-    const orderInfo = `Thanh toan don hang ${order.orderCode}`;
+    const orderInfo = `${order.orderCode}`;
     console.log('🔍 Calling vnpayService.createPaymentUrl with:', {
       orderCode: order.orderCode,
       totalAmount,
